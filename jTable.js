@@ -19,14 +19,15 @@ jTable.t = function(tDom) {
         }
     }
     tbl.getSort = function () {
-        var aSort = [];
-        for (var i=0; i<tbl.hCells.length; i++) if (tbl.hCells[i].getSort()) {
-            aSort.push({cellIndex: i, dir: tbl.hCells[i].getSort()})
+        var aSort = [], hSort;
+        for (var i=0; i<tbl.hCells.length; i++) if (tbl.hCells[i].getAttribute("sort")) {
+            hSort = tbl.hCells[i].getAttribute("sort").split(":");
+            aSort[hSort[1]] = {cellIndex: i, dir: hSort[0]};
         }
         return aSort;
     }
     tbl.setSort = function(aSort) {
-        if (aSort[0] == undefined) {
+        if (!aSort.length) {
             throw new TypeError ("jTable.setSort() expects an array parameter");
         }
         for (var i=0; i<aSort.length; i++) {
@@ -39,28 +40,33 @@ jTable.t = function(tDom) {
 	var tblDataTypes = tbl.dataType();
 	var colDataType = tbl.hCells[aSort[0].cellIndex].dataType();
 	var currentSort = tbl.getSort();
-	for (var i = 0; i < tbl.hCells.length; i++)
-	    tbl.hCells[i].removeAttribute("sort");
-	tbl.hCells[aSort[0].cellIndex].setAttribute("sort", aSort[0].dir);
 	var rows = tbl.tBodies[0].rows;
 	var swapTest = function(a, b, direction, type) {
-	    if (a==b) {
-		return false;
+	    if (a===b) {
+		return 0;
 	    }
+	    var dir = (direction == 'up') ? 1 : -1;
 	    switch (type) {
 		case 'number':
-		    return Number(a) > Number(b) ? (direction == 'up') : (direction == 'down');
+		    return dir * (Number(a) > Number(b) ? 1 : -1);
 		    break;
 		case 'string':
-		    return a > b ? (direction == 'up') : (direction == 'down');
+		    return dir * (a > b ? 1 : -1);
 		    break;
 	    }
 	}
-	
-	//use comb sort O(n log n), but only if it's not already sorted - reflect is O(n) 
+	//update sort attributes
+	for (var i=0; i < tbl.hCells.length; i++) {
+	    tbl.hCells[i].removeAttribute("sort");
+	}
+	for (var i=0; i < aSort.length; i++)  {
+	    tbl.hCells[aSort[i].cellIndex].setAttribute("sort", aSort[i].dir + ":" + i);
+	}	
+	//use comb sort O(n log n), but if it's already sorted just reflect O(n) 
 	if (currentSort.length == 0 || (currentSort[0].cellIndex != aSort[0].cellIndex || currentSort[0].dir == aSort[0].dir)) {
 	    var gap = rows.length;
 	    var swapped = true;
+	    var swapResult;
 	    while (gap > 1 || swapped) {
 	    //update the gap value for a next comb
 	        if (gap > 1) {
@@ -71,10 +77,18 @@ jTable.t = function(tDom) {
 	        swapped = false;
 	        //a single "comb" over the input list
 	        for (var i=0; i + gap < rows.length; i++) {
-	            if (swapTest(rows[i].cells[aSort[0].cellIndex].textContent, rows[i + gap].cells[aSort[0].cellIndex].textContent, aSort[0].dir, colDataType)) {
-	                var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
-	                rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
-	                swapped = true;
+	            for (var j=0; j<aSort.length; j++) {
+	                swapResult = swapTest(rows[i].cells[aSort[j].cellIndex].textContent, rows[i + gap].cells[aSort[j].cellIndex].textContent, aSort[j].dir, tblDataTypes[aSort[j].cellIndex]);
+	                if (swapResult == -1) {
+	                    break;
+	                }
+	                else if (swapResult == 1) {
+	                    var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
+	                    rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
+	                    swapped = true;
+	                    break;
+	                }
+	            
 	            }
 	        }
 	    }
@@ -171,17 +185,16 @@ jTable.$ = function() {
 }
 jTable.h = function(hDom) {
     //first,check the hDom type and raise a TypeError if appropriate
-    var hd = (typeof hDom == "string") ? document.getElementById(hDom) : hDom;
-    if (hd == undefined) {
+    var rHead = (typeof hDom == "string") ? document.getElementById(hDom) : hDom;
+    if (rHead == undefined) {
         throw new TypeError("jTable.h() expects a DOM element");
     }
-    if (hd.tagName.toLowerCase() != "th") {
+    if (rHead.tagName.toLowerCase() != "th") {
         throw new TypeError("jTable.h() expects a TH element");
     }
-    var rHead = hd;
     //then, return a new object based on the header DOM but with more methods
     rHead.getSort = function() {
-    	return rHead.getAttribute("sort");
+    	return rHead.getAttribute("sort") ? rHead.getAttribute("sort").split(":")[0] : undefined;
     }
     rHead.setSort = function(dir) {
         return jTable.t(rHead).setSort([{cellIndex: rHead.cellIndex, dir: dir}])
