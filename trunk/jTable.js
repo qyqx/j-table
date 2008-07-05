@@ -29,7 +29,7 @@ jTable.t = function(tDom) {
         return aSort;
     }
     tbl.setSort = function(aSort) {
-        if (!aSort.length) {
+        if (typeof aSort != "object" || aSort.constructor != Array) {
             throw new TypeError ("jTable.setSort() expects an array parameter");
         }
         for (var i=0; i<aSort.length; i++) {
@@ -40,7 +40,6 @@ jTable.t = function(tDom) {
 	//this is a comb sort. O(n log n), but O(n) if already sorted
 	//for now, just sort using first item in sort array
 	var tblDataTypes = tbl.dataType();
-	var colDataType = tbl.hCells[aSort[0].cellIndex].dataType();
 	var currentSort = tbl.getSort();
 	var rows = tbl.tBodies[0].rows;
 	var swapTest = function(a, b, direction, type) {
@@ -67,8 +66,17 @@ jTable.t = function(tDom) {
 	    sortOrder.push(aSort[i].cellIndex)
 	}
 	tbl.tHead.setAttribute("sortOrder", sortOrder.join(","));
-	//use comb sort O(n log n), but if it's already sorted just reflect O(n) 
-	if (currentSort.length == 0 || (currentSort[0].cellIndex != aSort[0].cellIndex || currentSort[0].dir == aSort[0].dir)) {
+	if (aSort.length == 0) {
+	    return tbl;
+	}
+	//if it's already sorted the opposite way, just reflect it
+	if (currentSort.length == 1 && aSort.length == 1 && currentSort[0].cellIndex == aSort[0].cellIndex 
+	  && currentSort[0].dir != aSort[0].dir) {
+	    for (var i=rows.length - 1; i>=0; i--) {
+	        rows[0].parentNode.appendChild(rows[0].parentNode.removeChild(rows[i]));
+	    }	  
+	} else {
+	//use comb sort O(n log n)
 	    var gap = rows.length;
 	    var swapped = true;
 	    var swapResult;
@@ -96,11 +104,6 @@ jTable.t = function(tDom) {
 	            
 	            }
 	        }
-	    }
-	}
-	else {
-	    for (var i=rows.length - 1; i>=0; i--) {
-	        rows[0].parentNode.appendChild(rows[0].parentNode.removeChild(rows[i]));
 	    }
 	}
 	return tbl;
@@ -202,7 +205,13 @@ jTable.h = function(hDom) {
     	return rHead.getAttribute("sort");
     }
     rHead.setSort = function(dir) {
-        return jTable.t(rHead).setSort([{cellIndex: rHead.cellIndex, dir: dir}])
+        if (dir) {
+            jTable.t(rHead).setSort([{cellIndex: rHead.cellIndex, dir: dir}]);
+        }
+        else {
+            jTable.t(rHead).setSort([]);
+        }
+        return rHead;
     }
     rHead.dataType = function() {
 	//check data type of first entry. then check if all others consistent, if not then string.
