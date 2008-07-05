@@ -20,9 +20,11 @@ jTable.t = function(tDom) {
     }
     tbl.getSort = function () {
         var aSort = [], hSort;
-        for (var i=0; i<tbl.hCells.length; i++) if (tbl.hCells[i].getAttribute("sort")) {
-            hSort = tbl.hCells[i].getAttribute("sort").split(":");
-            aSort[hSort[1]] = {cellIndex: i, dir: hSort[0]};
+        if (tbl.tHead.getAttribute("sortOrder")) {
+            hSort = tbl.tHead.getAttribute("sortOrder").split(",");
+            for (var i=0; i<hSort.length; i++) {
+                aSort.push({cellIndex: hSort[i], dir: tbl.hCells[hSort[i]].getSort()});
+            }
         }
         return aSort;
     }
@@ -59,9 +61,12 @@ jTable.t = function(tDom) {
 	for (var i=0; i < tbl.hCells.length; i++) {
 	    tbl.hCells[i].removeAttribute("sort");
 	}
+	var sortOrder = [];
 	for (var i=0; i < aSort.length; i++)  {
-	    tbl.hCells[aSort[i].cellIndex].setAttribute("sort", aSort[i].dir + ":" + i);
-	}	
+	    tbl.hCells[aSort[i].cellIndex].setAttribute("sort", aSort[i].dir);
+	    sortOrder.push(aSort[i].cellIndex)
+	}
+	tbl.tHead.setAttribute("sortOrder", sortOrder.join(","));
 	//use comb sort O(n log n), but if it's already sorted just reflect O(n) 
 	if (currentSort.length == 0 || (currentSort[0].cellIndex != aSort[0].cellIndex || currentSort[0].dir == aSort[0].dir)) {
 	    var gap = rows.length;
@@ -194,7 +199,7 @@ jTable.h = function(hDom) {
     }
     //then, return a new object based on the header DOM but with more methods
     rHead.getSort = function() {
-    	return rHead.getAttribute("sort") ? rHead.getAttribute("sort").split(":")[0] : undefined;
+    	return rHead.getAttribute("sort");
     }
     rHead.setSort = function(dir) {
         return jTable.t(rHead).setSort([{cellIndex: rHead.cellIndex, dir: dir}])
