@@ -31,7 +31,7 @@ var tc_jTable_t = new YAHOO.tool.TestCase({
 var tc_jTable_h = new YAHOO.tool.TestCase({
 	name: "jTable.h",
 	setUp : function () {
-	    this.data = jTable.h(jTable.$('firstTableCell'));
+	    this.data = jTable.h('firstTableCell');
 	},
 	tearDown : function () {
 	    delete this.data;
@@ -48,7 +48,7 @@ var tc_jTable_h = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.h('firstTableCell').tagName.toLowerCase(), "th", "jTable.t() should accept string parameter");
 	},	
 	testInputNotTableCell: function () {
-	    jTable.h(jTable.$('menu'));
+	    jTable.h('menu');
 	}
 });
 var tc_jTable_t_sort = new YAHOO.tool.TestCase({
@@ -58,6 +58,7 @@ var tc_jTable_t_sort = new YAHOO.tool.TestCase({
 	},
 	tearDown : function () {
 	    delete this.data;
+	    jTable.t('testTable').setSort([]);
 	},
 	_should: {
 	    error: {
@@ -82,12 +83,19 @@ var tc_jTable_t_sort = new YAHOO.tool.TestCase({
 	testSetSortNoDir: function() {
 	    jTable.t('testTable').setSort([{cellIndex: 2, typo: 'up'}]);
 	},
-	testSetSort1: function() {
-	    jTable.t('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
-	    assert.areEqual(jTable.t('testTable').getSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
-	    assert.areEqual(jTable.t('testTable').getSort()[0].dir, 'up', "setSort did not respect dir");
-	    assert.areEqual(jTable.$('testTable').tBodies[0].rows[0].cells[0].textContent, 'UK', 'setSort did not sort correctly');
-	    assert.areEqual(jTable.$('testTable').tBodies[0].rows[1].cells[0].textContent, 'France', 'setSort did not sort correctly');
+	testSetSingleSort: function() {
+	    var tbl = jTable.t('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
+	    assert.areEqual(tbl.getSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
+	    assert.areEqual(tbl.getSort()[0].dir, 'up', "setSort did not respect dir");
+	    assert.areEqual(tbl.tBodies[0].rows[0].cells[0].textContent, 'UK', 'setSort did not sort correctly');
+	    assert.areEqual(tbl.tBodies[0].rows[1].cells[0].textContent, 'France', 'setSort did not sort correctly');
+	},
+	testSetMultipleSort: function() {
+	    var tbl = jTable.t('testTable').setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
+	    assert.areEqual(tbl.getSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
+	    assert.areEqual(tbl.getSort()[1].dir, 'up', "setSort did not respect the second dir");
+	    assert.areEqual(tbl.tBodies[0].rows[0].cells[0].textContent, 'France', 'setSort did not multi-sort correctly');
+	    assert.areEqual(tbl.tBodies[0].rows[1].cells[0].textContent, 'USA', 'setSort did not multi-sort correctly');    
 	}
 });
 var tc_jTable_h_sort = new YAHOO.tool.TestCase({
@@ -97,22 +105,13 @@ var tc_jTable_h_sort = new YAHOO.tool.TestCase({
 	},
 	tearDown : function () {
 	    delete this.data;
+	    jTable.h('testColHeader').setSort();
 	},
-	_should: {
-	    error: {
-	        testSetSortNoArray: TypeError,
-	        testSetSortNoCellIndex: TypeError,
-	        testSetSortNoDir: TypeError
-	    }	
-	},
-	testGetSort: function () {
-	    assert.isString(this.data, "jTable.t().getSort() should return a string");
-	},
-	testSetSort: function() {
+	testSort: function() {
 	    jTable.h('testColHeader').setSort('up');
-	    assert.areEqual(jTable.h('testColHeader').getSort(), 'up', "setSort did not sort up");
-	    assert.areEqual(jTable.$('testTable').tBodies[0].rows[0].cells[0].textContent, 'UK', 'setSort did not sort correctly');
-	    assert.areEqual(jTable.$('testTable').tBodies[0].rows[1].cells[0].textContent, 'France', 'setSort did not sort correctly');
+	    assert.areEqual(jTable.h('testColHeader').getSort(), 'up', "getSort did not reflect setSort");
+	    assert.areEqual(jTable.t('testTable').tBodies[0].rows[0].cells[0].textContent, 'UK', 'setSort did not sort correctly');
+	    assert.areEqual(jTable.t('testTable').tBodies[0].rows[1].cells[0].textContent, 'France', 'setSort did not sort correctly');
 	}
 });
 var tc_jTable_datatype = new YAHOO.tool.TestCase({
@@ -152,8 +151,11 @@ var tc_jTable_h_filter = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.h('testColHeader').getFilter(), undefined, "jTable.h().getFilter() didn't return an empty object");
 	},
 	testSetFilter: function() {
-	    jTable.h('testColHeader').setFilter(/50|60/);
-	    //assert.areEqual(jTable.h('testColHeader').getFilter(), /50|60/, "setFilter didn't filter properly");
+	    jTable.h('testColHeader').setFilter(/^50|60$/);
+	    var rows = jTable.t('testColHeader').tBodies[0].rows;
+	    for (var i=0; i<rows.length; i++) {
+	        assert.areEqual(rows[i].className.search("filtered") >= 0, rows[i].cells[0].textContent == "USA", "setFilter didn't filter properly");
+	    }
 	}
 });
 var tc_jTable_t_filter = new YAHOO.tool.TestCase({
@@ -163,10 +165,12 @@ var tc_jTable_t_filter = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.t('testTable').getFilter().length, 0, "jTable.t().getFilter() should return an empty array");
 	},
 	testSetFilter: function() {
-	    jTable.t('testTable').setFilter([{cellIndex: 1, filter: /50|60/}]);
+	    jTable.t('testTable').setFilter([{cellIndex: 1, filter: /^50|60$/}]);
 	    assert.areEqual(jTable.t('testTable').getFilter().length, 1, "setFilter didn't hide every column");
-	    assert.areEqual(jTable.t('testTable').tBodies[0].rows[0].className, "", "setFilter didn't filter in the first row");
-	    assert.areEqual(jTable.t('testTable').tBodies[0].rows[1].className, "filtered", "setFilter didn't filter out the second row");
+	    var rows = jTable.t('testColHeader').tBodies[0].rows;
+	    for (var i=0; i<rows.length; i++) {
+	        assert.areEqual(rows[i].className.search("filtered") >= 0, rows[i].cells[0].textContent == "USA", "setFilter didn't filter properly");
+	    }
 	}
 });
 YAHOO.tool.TestRunner.add(tc_jTable_t);
