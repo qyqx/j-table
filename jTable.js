@@ -3,13 +3,13 @@ jTable.t = function(tDom) {
     //first, create a table object, raising a TypeError if appropriate
     var tbl = (typeof tDom == "string") ? document.getElementById(tDom) : tDom;
     if (tbl == undefined) {
-        throw new TypeError("jTable.t() expects a table DOM element");
+        return undefined;
     }
     while (tbl.tagName.toLowerCase() != 'table' && tbl.tagName.toLowerCase() != 'body') {
         tbl = tbl.parentNode;
     }
     if (tbl.tagName.toLowerCase() == 'body') {
-        throw new TypeError("jTable.t() expects an element inside a table");
+        return undefined;
     }
     //then, add utility methods to tbl
     tbl.hCells = [];
@@ -179,26 +179,11 @@ jTable.t = function(tDom) {
     }
     return tbl;
 }
-jTable.$ = function() {
-    var elements = [];
-    for (var i = 0; i < arguments.length; i++) {
-        var element = arguments[i];
-        if (typeof element == 'string')
-            element = document.getElementById(element);
-        if (arguments.length == 1)
-            return element;
-        elements.push(element);
-    }
-    return elements;
-}
 jTable.h = function(hDom) {
     //first,check the hDom type and raise a TypeError if appropriate
     var rHead = (typeof hDom == "string") ? document.getElementById(hDom) : hDom;
-    if (rHead == undefined) {
-        throw new TypeError("jTable.h() expects a DOM element");
-    }
-    if (rHead.tagName.toLowerCase() != "th") {
-        throw new TypeError("jTable.h() expects a TH element");
+    if (rHead == undefined || rHead.tagName.toLowerCase() != "th") {
+        return undefined;
     }
     //then, return a new object based on the header DOM but with more methods
     rHead.getSort = function() {
@@ -291,4 +276,42 @@ jTable.h = function(hDom) {
         return values;
     }
     return rHead;    
+}
+jTable.c = function(cDom) {
+    //first,check the cDom type and raise a TypeError if appropriate
+    var cell = (typeof cDom == "string") ? document.getElementById(cDom) : cDom;
+    if (cell == undefined || cell.tagName.toLowerCase().search(/^th|td$/) == -1 ) {
+        return undefined;
+    }
+    //then, return a new object based on the header DOM but with more methods
+    cell.setEditMode = function(ed) {
+        var currentEd = cell.getEditMode();
+        if (ed && !currentEd) {
+            var div = document.createElement("div");
+            div.contentEditable = true;
+            while (cell.hasChildNodes()) {
+                div.appendChild(cell.removeChild(cell.childNodes[0]));
+            }
+            cell.appendChild(div);
+            //remove all other editCells;
+            while (document.getElementById("editCell")) {
+	        jTable.c("editCell").setEditMode(false);
+            }
+            cell.id = "editCell";
+        } 
+        if (!ed && currentEd) {
+            var div = cell.getElementsByTagName("div")[0];
+            div.removeAttribute("contentEditable");
+            while (div.hasChildNodes()) {
+                cell.appendChild(div.removeChild(div.childNodes[0]))
+            }
+            cell.removeChild(div);
+            cell.removeAttribute("id");
+        }
+        return cell;
+    }
+    cell.getEditMode = function() {
+        return (cell.getElementsByTagName("div").length == 0) ? false : true;
+    }
+    return cell;
 }

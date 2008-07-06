@@ -7,11 +7,6 @@ var tc_jTable_t = new YAHOO.tool.TestCase({
 	tearDown : function () {
 	    delete this.dataTable;
 	},
-	_should: {
-	    error: {
-	        testInputNotTable: TypeError
-	    }	
-	},
 	testInputTable: function () {
 	    assert.isObject(jTable.t('testTable').rows, "jTable.t() should accept DOM table parameter");
 	},
@@ -25,7 +20,7 @@ var tc_jTable_t = new YAHOO.tool.TestCase({
 	    assert.isObject(jTable.t('testTable').rows, "jTable.t() should accept string parameter");
 	},	
 	testInputNotTable: function () {
-	    jTable.t(jTable.$('menu'));
+	    assert.areEqual(jTable.t('menu'), undefined, "jTable should not allow non-table parameter");
 	}
 });
 var tc_jTable_h = new YAHOO.tool.TestCase({
@@ -36,11 +31,6 @@ var tc_jTable_h = new YAHOO.tool.TestCase({
 	tearDown : function () {
 	    delete this.data;
 	},
-	_should: {
-	    error: {
-	        testInputNotTableCell: TypeError
-	    }	
-	},
 	testInputTableCell: function () {
 	    assert.areEqual(this.data.tagName.toLowerCase(), "th", "jTable.t() should accept DOM cell parameter");
 	},
@@ -48,7 +38,7 @@ var tc_jTable_h = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.h('firstTableCell').tagName.toLowerCase(), "th", "jTable.t() should accept string parameter");
 	},	
 	testInputNotTableCell: function () {
-	    jTable.h('menu');
+	    assert.areEqual(jTable.h('menu'), undefined, "jTable should not allow non-table parameter");
 	}
 });
 var tc_jTable_t_sort = new YAHOO.tool.TestCase({
@@ -160,6 +150,9 @@ var tc_jTable_h_filter = new YAHOO.tool.TestCase({
 });
 var tc_jTable_t_filter = new YAHOO.tool.TestCase({
 	name: "jTable.t.filter",
+	tearDown : function () {
+	    jTable.t('testTable').setFilter([]);
+	},
 	testGetFilter: function () {
 	    jTable.t('testTable').setFilter([]);
 	    assert.areEqual(jTable.t('testTable').getFilter().length, 0, "jTable.t().getFilter() should return an empty array");
