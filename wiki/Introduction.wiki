@@ -2,9 +2,9 @@ Welcome to j-table, the javascript library for manipulating HTML tables.
 
 ==Global object==
 There is only one global object - jTable. jTable has only three members:
-  *t, representing a table
-  *h, representing a header cell (th) inside a thead row
-  *c, representing any cell in the table, either th or td
+  * t, representing a table
+  * h, representing a header cell (th) inside a thead row
+  * c, representing any cell in the table, either th or td
 
 ==jTable.t()==
 jTable.t() takes one parameter, the table identifier. This can either be a string containing the table id, or the Table DOM object. In fact, it can also be the id or DOM object of any element inside the table, e.g. a td. If the id or DOM is not found, or does not refer to a table, then jTable.t() returns {{{undefined}}}.
