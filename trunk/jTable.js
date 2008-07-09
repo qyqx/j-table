@@ -182,7 +182,13 @@ jTable.t = function(tDom) {
 jTable.h = function(hDom) {
     //first,check the hDom type and raise a TypeError if appropriate
     var rHead = (typeof hDom == "string") ? document.getElementById(hDom) : hDom;
-    if (rHead == undefined || rHead.tagName.toLowerCase() != "th") {
+    if (rHead == undefined) { 
+        return undefined;
+    }
+    while (rHead.tagName.toLowerCase() != 'th' && rHead.tagName.toLowerCase() != 'body') {
+        rHead = rHead.parentNode;
+    }
+    if (rHead.tagName.toLowerCase() == 'body') {
         return undefined;
     }
     //then, return a new object based on the header DOM but with more methods
@@ -280,7 +286,13 @@ jTable.h = function(hDom) {
 jTable.c = function(cDom) {
     //first,check the cDom type and raise a TypeError if appropriate
     var cell = (typeof cDom == "string") ? document.getElementById(cDom) : cDom;
-    if (cell == undefined || cell.tagName.toLowerCase().search(/^th|td$/) == -1 ) {
+    if (cell == undefined) {
+        return undefined;
+    }
+    while (cell.tagName.toLowerCase().search(/^th|td$/) == -1 && cell.tagName.toLowerCase() != 'body') {
+        cell = cell.parentNode;
+    }
+    if (cell.tagName.toLowerCase() == 'body') {
         return undefined;
     }
     //then, return a new object based on the header DOM but with more methods
@@ -293,14 +305,18 @@ jTable.c = function(cDom) {
                 div.appendChild(cell.removeChild(cell.childNodes[0]));
             }
             cell.appendChild(div);
-            //remove all other editCells;
-            while (document.getElementById("editCell")) {
-	        jTable.c("editCell").setEditMode(false);
-            }
+	   //warning: this could create duplicates
             cell.id = "editCell";
         } 
         if (!ed && currentEd) {
-            var div = cell.getElementsByTagName("div")[0];
+            //find the child div with contentEditable==true
+            var div;
+            for (var i=0; i < cell.childNodes.length; i++) {
+                if (cell.childNodes[i].nodeType == 1 && cell.childNodes[i].nodeName.toLowerCase() == 'div' && cell.childNodes[i].contentEditable) {
+                    div = cell.childNodes[i];
+                    break;
+                }            
+            }
             div.removeAttribute("contentEditable");
             while (div.hasChildNodes()) {
                 cell.appendChild(div.removeChild(div.childNodes[0]))
@@ -311,7 +327,11 @@ jTable.c = function(cDom) {
         return cell;
     }
     cell.getEditMode = function() {
-        return (cell.getElementsByTagName("div").length == 0) ? false : true;
+        var divs = cell.getElementsByTagName("div");
+        for (var i=0; i < divs.length; i++) if (divs[i].contentEditable) {
+            return true;
+        }
+        return false;
     }
     return cell;
 }
