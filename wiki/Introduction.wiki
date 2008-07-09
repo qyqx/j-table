@@ -6,5 +6,53 @@ There is only one global object - jTable. jTable has only three members:
   * h, representing a header cell (th) inside a thead row
   * c, representing any cell in the table, either th or td
 
-==jTable.t()==
-jTable.t() takes one parameter, the table identifier. This can either be a string containing the table id, or the Table DOM object. In fact, it can also be the id or DOM object of any element inside the table, e.g. a td. If the id or DOM is not found, or does not refer to a table, then jTable.t() returns {{{undefined}}}.
+==Example table==
+Throughout this document, I will use the following example table: 
+{{{
+<table id="tbl" viewas="table">
+  <thead id="tbl_thead">
+  <tr id="tbl_thead_tr">
+    <th id="tbl_thead_th0">Country</th>
+    <th id="tbl_thead_th1">Q1</th> 
+    <th id="tbl_thead_th2">Q2</th>
+    <th id="tbl_thead_th3">Q3</th>
+    <th id="tbl_thead_th4">Q4</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr id="tbl_tbody_tr0">
+    <th id="tbl_tbody_tr0_0">USA</th>
+    <td id="tbl_tbody_tr0_1">100</td>
+    <td id="tbl_tbody_tr0_2">80</td>
+    <td id="tbl_tbody_tr0_3">110</td>
+    <td id="tbl_tbody_tr0_4">150</td>
+  </tr>
+  </tbody>
+</table>
+}}}
+which displays like this:
+|| *Country* || *Q1* || *Q2* || *Q3* || *Q4* ||
+|| USA || 100 || 80 || 110 || 150 ||
+
+==jTable.t==
+jTable.t is the object that allows you to manage the table. It returns a DOM table object enhanced with powerful additional members.
+
+jTable.t takes one parameter, the table identifier. This can either be a string containing the table id, or the Table DOM object. In fact, it can also be the id or DOM object of any element inside the table, e.g. a td. If the id or DOM is not found, or does not refer to a table, then jTable.t() returns {{{undefined}}}.
+
+The following examples all return the same table:
+{{{
+var a = jTable.t('tbl');
+var b = jTable.t('tbl_thead');
+var c = jTable.t('tbl_tbody_tr0_3')
+var d = jTable.t(a);
+}}}
+
+jTable.t has the following members:
+  * hCells
+  * getSort()
+  * setSort()
+  * dataType()
+  * getHide()
+  * setHide()
+  * getFilter()
+  * setFilter()
