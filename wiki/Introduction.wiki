@@ -48,6 +48,7 @@ var d = jTable.t(a);
 }}}
 
 jTable.t has the following members:
+  * all the normal [http://developer.mozilla.org/en/docs/DOM:table DOM Table members], e.g. id and rows
   * hCells
   * getSort()
   * setSort()
