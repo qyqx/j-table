@@ -35,9 +35,9 @@ which displays like this:
 || USA || 100 || 80 || 110 || 150 ||
 
 ==jTable.t==
-jTable.t is the object that allows you to manage the table. It returns a DOM table object enhanced with powerful additional members.
+[jTable.t] is the object that allows you to manage the table. It returns a DOM table object enhanced with powerful additional members. 
 
-jTable.t takes one parameter, the table identifier. This can either be a string containing the table id, or the Table DOM object. In fact, it can also be the id or DOM object of any element inside the table, e.g. a td. If the id or DOM is not found, or does not refer to a table, then jTable.t() returns {{{undefined}}}.
+[jTable.t] takes one parameter, the table identifier. This can either be a string containing the table id, or the Table DOM object. In fact, it can also be the id or DOM object of any element inside the table, e.g. a td. If the id or DOM is not found, or does not refer to a table, then jTable.t() returns {{{undefined}}}.
 
 The following examples all return the same table:
 {{{
@@ -47,7 +47,7 @@ var c = jTable.t('tbl_tbody_tr0_3')
 var d = jTable.t(a);
 }}}
 
-jTable.t has the following members:
+[jTable.t] has the following members:
   * all the normal [http://developer.mozilla.org/en/docs/DOM:table DOM Table members], e.g. id and rows
   * hCells
   * getSort()
@@ -57,3 +57,77 @@ jTable.t has the following members:
   * setHide()
   * getFilter()
   * setFilter()
+
+For example, to hide the first and second columns, use 
+{{{
+  jTable.t('tbl').setHide([0, 1]);
+}}}
+Or to sort the second column up, use
+{{{
+  jTable.t('tbl').setSort([{cellIndex: 1, dir: 'up'}]);
+}}}
+Or to find out an array of filters on the columns, use
+{{{
+  jTable.t('tbl').getFilter();
+}}}
+
+==jTable.h==
+[jTable.h] is the object that allows you to manage a header of the table. It returns a DOM TH object enhanced with powerful additional members. 
+
+[jTable.h] takes one parameter, the header identifier. This can either be a string containing the header id, or the header DOM object. In fact, it can also be the id or DOM object of any element inside the header, e.g. an img. If the id or DOM is not found, or does not refer to a header, then jTable.h() returns {{{undefined}}}.
+
+The following examples return the same header cell:
+{{{
+var a = jTable.h('tbl_thead_th1');
+var b = jTable.h(a);
+}}}
+
+[jTable.h] has the following members:
+  * all the normal [http://developer.mozilla.org/en/docs/DOM:table DOM Table cell members], e.g. id
+  * getSort()
+  * setSort()
+  * dataType()
+  * getHide()
+  * setHide()
+  * getFilter()
+  * setFilter()
+  * getUniqueValues()
+
+For example, to hide the second column, use 
+{{{
+  jTable.h('tbl_thead_th1').setHide(true);
+}}}
+Or to sort the second column up, use
+{{{
+  jTable.h('tbl_thead_th1').setSort('up');
+}}}
+Or to filter for the string "Hello World" on the second column, use
+{{{
+  jTable.h('tbl_thead_th1').setFilter(/Hello World/);
+}}}
+
+==jTable.c==
+[jTable.c] is the object that allows you to manage a table cell. It returns a DOM TH or TD object enhanced with powerful additional members. 
+
+[jTable.c] takes one parameter, the cell identifier. This can either be a string containing the cell id, or the cell DOM object. In fact, it can also be the id or DOM object of any element inside the cell, e.g. an img. If the id or DOM is not found, or does not refer to a cell, then jTable.c() returns {{{undefined}}}.
+
+The following examples return the same cell:
+{{{
+var a = jTable.c('tbl_tbody_tr0_1');
+var b = jTable.c(a);
+}}}
+
+[jTable.c] has the following members:
+  * all the normal [http://developer.mozilla.org/en/docs/DOM:table DOM Table cell members], e.g. id
+  * getEditMode()
+  * setEditMode()
+  * getTextContent()
+
+For example, to open up the cell for rich text editing, use 
+{{{
+  jTable.c('tbl_tbody_tr0_1').setEditMode(true);
+}}}
+Or to get the cell text contents, use
+{{{
+  jTable.c('tbl_tbody_tr0_1').getTextContent();
+}}}
