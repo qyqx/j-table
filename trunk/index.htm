@@ -59,7 +59,7 @@
 </div>
 
 <table id="firstTable" style="display:none">
-	<tr id="firstTableRow"><th id="firstTableCell"></td></tr>
+	<tr id="firstTableRow"><th id="firstTableCell"></th></tr>
 </table>
 
 <div id="divContent" onmousedown="mDown(event)">
@@ -160,39 +160,6 @@
 
 <script>
 /*
-* Plan of action.
-*
-* 1. Transform (sort, filter, hide, pivot)
-* All sort, filter, hide states are handled using a jTable javascript library
-* still to do:
-*    a) sort for array.length>1
-*    b) getFilter, setFilter
-*    c) fix colOptions, tableTransform etc to use new library
-*    c) optimise
-*    d) change style to rHead.prototype = {getHide: function() {...}, setHide: function() {...}, etc}
-*    e) allow filterOut, filterInGreater, filterInLess, ...
-*
-* 2. Cross-platform
-* Make it work across all major browsers (IE, FX, SF)
-*
-* 3. Edit (change data, add / delete rows & cols)
-* Use contenteditable. Or not - do it myself?
-* Use standard data types & formatting for col / row e.g. dates, with help to edit e.g. calendar
-*
-* 4. Function
-* Standard set of spreadsheet functions using javascript, allow named cols / rows
-* Allow functions in charts too
-*
-* 5. Chart
-* XSL takes tables to bar charts, line charts, etc, respecting state attributes & keeping all data
-* To go from line chart to bar chart, always go via tables
-* no native sort etc chart functions. transform to table, apply native function, transform back
-* Native editing for charts, exactly same as for table
-*
-* 6. Style
-* CSS templates for tables, currency types etc
-*
-*
 * Object Model
 *
 * jTable() is the top level object / namespace.

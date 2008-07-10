@@ -77,15 +77,15 @@ var tc_jTable_t_sort = new YAHOO.tool.TestCase({
 	    var tbl = jTable.t('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
 	    assert.areEqual(tbl.getSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
 	    assert.areEqual(tbl.getSort()[0].dir, 'up', "setSort did not respect dir");
-	    assert.areEqual(tbl.tBodies[0].rows[0].cells[0].textContent, 'UK', 'setSort did not sort correctly');
-	    assert.areEqual(tbl.tBodies[0].rows[1].cells[0].textContent, 'France', 'setSort did not sort correctly');
+	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[0].cells[0]).getTextContent(), 'UK', 'setSort did not sort correctly');
+	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[1].cells[0]).getTextContent(), 'France', 'setSort did not sort correctly');
 	},
 	testSetMultipleSort: function() {
 	    var tbl = jTable.t('testTable').setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
 	    assert.areEqual(tbl.getSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
 	    assert.areEqual(tbl.getSort()[1].dir, 'up', "setSort did not respect the second dir");
-	    assert.areEqual(tbl.tBodies[0].rows[0].cells[0].textContent, 'France', 'setSort did not multi-sort correctly');
-	    assert.areEqual(tbl.tBodies[0].rows[1].cells[0].textContent, 'USA', 'setSort did not multi-sort correctly');    
+	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[0].cells[0]).getTextContent(), 'France', 'setSort did not multi-sort correctly');
+	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[1].cells[0]).getTextContent(), 'USA', 'setSort did not multi-sort correctly');    
 	}
 });
 var tc_jTable_h_sort = new YAHOO.tool.TestCase({
@@ -100,8 +100,8 @@ var tc_jTable_h_sort = new YAHOO.tool.TestCase({
 	testSort: function() {
 	    jTable.h('testColHeader').setSort('up');
 	    assert.areEqual(jTable.h('testColHeader').getSort(), 'up', "getSort did not reflect setSort");
-	    assert.areEqual(jTable.t('testTable').tBodies[0].rows[0].cells[0].textContent, 'UK', 'setSort did not sort correctly');
-	    assert.areEqual(jTable.t('testTable').tBodies[0].rows[1].cells[0].textContent, 'France', 'setSort did not sort correctly');
+	    assert.areEqual(jTable.c(jTable.t('testTable').tBodies[0].rows[0].cells[0]).getTextContent(), 'UK', 'setSort did not sort correctly');
+	    assert.areEqual(jTable.c(jTable.t('testTable').tBodies[0].rows[1].cells[0]).getTextContent(), 'France', 'setSort did not sort correctly');
 	}
 });
 var tc_jTable_datatype = new YAHOO.tool.TestCase({
@@ -125,6 +125,7 @@ var tc_jTable_h_hide = new YAHOO.tool.TestCase({
 var tc_jTable_t_hide = new YAHOO.tool.TestCase({
 	name: "jTable.t.hide",
 	testGetHide: function () {
+		    
 	    assert.areEqual(jTable.t('testTable').getHide().length, 0, "jTable.t().getHide() should return an empty array");
 	},
 	testSetHide: function() {
@@ -166,6 +167,42 @@ var tc_jTable_t_filter = new YAHOO.tool.TestCase({
 	    }
 	}
 });
+var tc_jTable_c = new YAHOO.tool.TestCase({
+	name: "jTable.c",
+	setUp : function () {
+	    this.data = jTable.c('testColHeader');
+	},
+	tearDown : function () {
+	    delete this.data;
+	},
+	testInputTableCell: function () {
+	    assert.areEqual(jTable.c(document.getElementById('testColHeader')).tagName.toLowerCase(), "th", "jTable.t() should accept DOM cell parameter");
+	},
+	testInputString: function () {
+	    assert.areEqual(jTable.c('testColHeader').tagName.toLowerCase(), "th", "jTable.t() should accept string parameter");
+	},	
+	testInputNotTableCell: function () {
+	    assert.areEqual(jTable.c('menu'), undefined, "jTable should not allow non-table parameter");
+	}
+});
+var tc_jTable_c_editmode = new YAHOO.tool.TestCase({
+	name: "jTable.c.editMode",
+	setUp : function () {
+	    this.data = jTable.c('testColHeader');
+	},
+	tearDown : function () {
+	    delete this.data;
+	},
+	testGetEditMode: function () {
+	    assert.areEqual(this.data.getEditMode(), false, "jTable.c('testColHeader').getEditMode() should return false");
+	},
+	testSetEditMode: function() {
+	    this.data.setEditMode(true);
+	    assert.areEqual(this.data.getElementsByTagName("div").length, 1, "jTable.c().setEditMode() did not make a cell editable");
+	    assert.areEqual(this.data.getEditMode(), true, "jTable.c.setEditMode did not update jTable.c.getEditMode");
+	    this.data.setEditMode(false);
+	}
+});
 YAHOO.tool.TestRunner.add(tc_jTable_t);
 YAHOO.tool.TestRunner.add(tc_jTable_h);
 YAHOO.tool.TestRunner.add(tc_jTable_t_sort);
@@ -175,5 +212,7 @@ YAHOO.tool.TestRunner.add(tc_jTable_h_hide);
 YAHOO.tool.TestRunner.add(tc_jTable_t_hide);
 YAHOO.tool.TestRunner.add(tc_jTable_h_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_t_filter);
+YAHOO.tool.TestRunner.add(tc_jTable_c);
+YAHOO.tool.TestRunner.add(tc_jTable_c_editmode);
 var oLogger = new YAHOO.tool.TestLogger(); 
 YAHOO.tool.TestRunner.run();
