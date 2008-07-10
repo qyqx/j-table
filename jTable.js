@@ -91,7 +91,7 @@ jTable.t = function(tDom) {
 	        //a single "comb" over the input list
 	        for (var i=0; i + gap < rows.length; i++) {
 	            for (var j=0; j<aSort.length; j++) {
-	                swapResult = swapTest(rows[i].cells[aSort[j].cellIndex].textContent, rows[i + gap].cells[aSort[j].cellIndex].textContent, aSort[j].dir, tblDataTypes[aSort[j].cellIndex]);
+	                swapResult = swapTest(jTable.c(rows[i].cells[aSort[j].cellIndex]).getTextContent(), jTable.c(rows[i + gap].cells[aSort[j].cellIndex]).getTextContent(), aSort[j].dir, tblDataTypes[aSort[j].cellIndex]);
 	                if (swapResult == -1) {
 	                    break;
 	                }
@@ -163,7 +163,7 @@ jTable.t = function(tDom) {
 	    rowpass = true;
 	    for (var j=0; j < filters.length; j++) {
 	    //if any of the filters doesn't match, then mark the row as filtered
-	        if (!filters[j].filter.test(rows[irow].cells[filters[j].cellIndex].textContent)) {
+	        if (!filters[j].filter.test(jTable.c(rows[irow].cells[filters[j].cellIndex]).getTextContent())) {
 	            rowpass = false;
 	            break;
 	        }
@@ -213,7 +213,7 @@ jTable.h = function(hDom) {
 	for (var i=0; i<rows.length; i++) {
 	    dataType = "string";
 	    for (var j=0; j<dataTypes.length; j++) {
-	        if (dataTypes[j].re.test(rows[i].cells[cellIndex].textContent)) {
+	        if (dataTypes[j].re.test(jTable.c(rows[i].cells[cellIndex]).getTextContent())) {
 	            dataType = dataTypes[j].dataType;
 	            break;
 	        }
@@ -240,9 +240,9 @@ jTable.h = function(hDom) {
     }
     rHead.setHide = function(hide) {
 	var currentHide = jTable.t(rHead).getHide();
-	if (hide)
+	if (hide) {
 	    jTable.t(rHead).setHide(currentHide.concat([rHead.cellIndex]));
-	else {
+	} else {
 	    for (var j=0; j<currentHide.length; j++) {
 	        if (currentHide[j] == rHead.cellIndex) 
 	            currentHide.splice(j,1);
@@ -275,8 +275,8 @@ jTable.h = function(hDom) {
         var cloneTable = jTable.t(jTable.t(rHead).cloneNode(true)).setSort([{cellIndex: cellIndex, dir: 'up'}]);
         var rows = cloneTable.tBodies[0].rows;
         for (var i=0; i<rows.length; i++) {
-            if (i==0 || rows[i].cells[cellIndex].textContent != rows[i-1].cells[cellIndex].textContent) {
-                values.push(rows[i].cells[cellIndex].textContent);    
+            if (i==0 || jTable.c(rows[i].cells[cellIndex]).getTextContent() != jTable.c(rows[i-1].cells[cellIndex]).getTextContent()) {
+                values.push(jTable.c(rows[i].cells[cellIndex]).getTextContent());    
             }
         }
         return values;
@@ -332,6 +332,9 @@ jTable.c = function(cDom) {
             return true;
         }
         return false;
+    }
+    cell.getTextContent = function() {
+        return cell.textContent ? cell.textContent : cell.innerText;    
     }
     return cell;
 }
