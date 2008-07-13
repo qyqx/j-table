@@ -125,7 +125,6 @@ var tc_jTable_h_hide = new YAHOO.tool.TestCase({
 var tc_jTable_t_hide = new YAHOO.tool.TestCase({
 	name: "jTable.t.hide",
 	testGetHide: function () {
-		    
 	    assert.areEqual(jTable.t('testTable').getHide().length, 0, "jTable.t().getHide() should return an empty array");
 	},
 	testSetHide: function() {
@@ -144,8 +143,9 @@ var tc_jTable_h_filter = new YAHOO.tool.TestCase({
 	testSetFilter: function() {
 	    jTable.h('testColHeader').setFilter(/^50|60$/);
 	    var rows = jTable.t('testColHeader').tBodies[0].rows;
+	    var textContent;
 	    for (var i=0; i<rows.length; i++) {
-	        assert.areEqual(rows[i].className.search("filtered") >= 0, rows[i].cells[0].textContent == "USA", "setFilter didn't filter properly");
+	        assert.areEqual(rows[i].className.search("filtered") >= 0, jTable.c(rows[i].cells[0]).getTextContent() == "USA", "setFilter didn't filter properly");
 	    }
 	}
 });
@@ -162,8 +162,9 @@ var tc_jTable_t_filter = new YAHOO.tool.TestCase({
 	    jTable.t('testTable').setFilter([{cellIndex: 1, filter: /^50|60$/}]);
 	    assert.areEqual(jTable.t('testTable').getFilter().length, 1, "setFilter didn't hide every column");
 	    var rows = jTable.t('testColHeader').tBodies[0].rows;
+	    var textContent;
 	    for (var i=0; i<rows.length; i++) {
-	        assert.areEqual(rows[i].className.search("filtered") >= 0, rows[i].cells[0].textContent == "USA", "setFilter didn't filter properly");
+	        assert.areEqual(rows[i].className.search("filtered") >= 0, jTable.c(rows[i].cells[0]).getTextContent() == "USA", "setFilter didn't filter properly");
 	    }
 	}
 });
