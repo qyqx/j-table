@@ -1,7 +1,7 @@
 jTable = {};
 jTable.t = function(tDom) {
     //first, create a table object, raising a TypeError if appropriate
-    var tbl = (typeof tDom == "string") ? document.getElementById(tDom) : tDom;
+    var tbl = ((typeof tDom) == "string") ? document.getElementById(tDom) : tDom;
     if (tbl == undefined) {
         return undefined;
     }
@@ -117,30 +117,32 @@ jTable.t = function(tDom) {
     }
     tbl.getHide = function() {
         var answer = [];        
-        for (var i=0; i<tbl.hCells.length; i++) if (tbl.hCells[i].getAttribute("hide")) {
+        for (var i=0; i<tbl.hCells.length; i++) if (tbl.hCells[i].getHide()) {
             answer.push(i);
         }
         return answer;
     }
     tbl.setHide = function(hide) {
- 	//delete and re-create <col> elements with appropriate styles
-	if (this.getElementsByTagName("colgroup").length > 0)
-	    this.removeChild(this.getElementsByTagName("colgroup")[0]);
-	var colgroup = this.appendChild(document.createElement("colgroup"));
-	var col = "";
-	for (var i=0; i<tbl.hCells.length; i++) {
-	    col = document.createElement("col");
-	    for (var j=0; j<hide.length; j++) {
-	        if (hide[j] == i)
-	            col.setAttribute("style", "visibility:collapse");
-	    }
-	    if (col.getAttribute("style"))
-	        tbl.hCells[i].setAttribute("hide", "hide");
-	    else
-	        tbl.hCells[i].removeAttribute("hide");
-	    colgroup.appendChild(col);
+        var currentHide = tbl.getHide();
+        var removeHide = [];
+        var newHide = [];
+        for (var i=0; i<hide.length; i++) {
+            if (("|" + currentHide.join("|") + "|").indexOf("|" + hide[i] + "|") == -1) {
+                newHide.push(hide[i]);
+            }
         }
-        return hide;
+        for (var i=0; i<currentHide.length; i++) {
+            if (("|" + hide.join("|") + "|").indexOf("|" + currentHide[i] + "|") == -1) {
+                removeHide.push(currentHide[i]);
+            }
+        }
+        for (var i=0; i<newHide.length; i++) {
+            tbl.hCells[newHide[i]].setHide(true);
+        }
+        for (var i=0; i<removeHide.length; i++) {
+	    tbl.hCells[removeHide[i]].setHide(false);
+        }
+        return tbl;
     }
     tbl.getFilter = function() {
         var answer = [];
@@ -181,7 +183,7 @@ jTable.t = function(tDom) {
 }
 jTable.h = function(hDom) {
     //first,check the hDom type and raise a TypeError if appropriate
-    var rHead = (typeof hDom == "string") ? document.getElementById(hDom) : hDom;
+    var rHead = ((typeof hDom) == "string") ? document.getElementById(hDom) : hDom;
     if (rHead == undefined) { 
         return undefined;
     }
@@ -233,21 +235,46 @@ jTable.h = function(hDom) {
 	return dataType;
     }
     rHead.getHide = function() {
-        answer = false;
-        if (rHead.getAttribute("hide"))
+        var answer = false;
+        var col = jTable.t(rHead).getElementsByTagName("col")[rHead.cellIndex];
+        if (col && (col.style.visibility == 'collapse' || col.style.display == 'none')) {
             answer = true;
+        }
         return answer;        
     }
     rHead.setHide = function(hide) {
-	var currentHide = jTable.t(rHead).getHide();
-	if (hide) {
-	    jTable.t(rHead).setHide(currentHide.concat([rHead.cellIndex]));
-	} else {
-	    for (var j=0; j<currentHide.length; j++) {
-	        if (currentHide[j] == rHead.cellIndex) 
-	            currentHide.splice(j,1);
+	var currentHide = rHead.getHide();
+	var rows;
+	var cellIndex = rHead.cellIndex;
+	var tbl = jTable.t(rHead);
+	var colgroup = tbl.getElementsByTagName("colgroup")[0];
+	//create the colgroup if it doesn't already exist
+	if (!colgroup) {
+	    colgroup = tbl.appendChild(document.createElement("colgroup"));
+	}
+	//create the cols if they don't already exist in the right number
+	if (colgroup.getElementsByTagName("col").length !== tbl.hCells.length) {
+	    for (var i=0; i<colgroup.getElementsByTagName("col").length; i++) {
+	        colgroup.removeChild(colgroup.getElementsByTagName("col")[i]);
 	    }
-	    jTable.t(rHead).setHide(currentHide);
+	    for (var i=0; i<tbl.hCells.length; i++) {
+	        colgroup.appendChild(document.createElement("col"));
+	    }	
+	}
+	var col = colgroup.getElementsByTagName("col")[cellIndex];
+	if (hide && !currentHide) {
+	    try { //Fx, Safari
+	        col.style.visibility = 'collapse';
+	    } catch(err) {
+	        col.style.display = 'none';
+	    }
+	}
+	if (!hide && currentHide) {
+	    if (col.style.display == 'none') {
+	        col.style.display = '';
+	    } else {
+	        col.style.visibility = '';
+	    }
 	}
 	return rHead;
     }
@@ -306,6 +333,9 @@ jTable.c = function(cDom) {
             }
             cell.appendChild(div);
 	   //warning: this could create duplicates
+	    if (cell.id) {
+	        cell.setAttribute("old_id", cell.id);
+	    }
             cell.id = "editCell";
         } 
         if (!ed && currentEd) {
@@ -322,7 +352,12 @@ jTable.c = function(cDom) {
                 cell.appendChild(div.removeChild(div.childNodes[0]))
             }
             cell.removeChild(div);
-            cell.removeAttribute("id");
+            if (cell.getAttribute("old_id")) {
+                cell.id = cell.getAttribute("old_id");
+                cell.removeAttribute("old_id");
+            } else {
+                cell.removeAttribute("id");
+            }
         }
         return cell;
     }
