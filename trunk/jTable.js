@@ -20,8 +20,8 @@ jTable.t = function(tDom) {
     }
     tbl.getSort = function () {
         var aSort = [], hSort;
-        if (tbl.tHead.getAttribute("sortOrder")) {
-            hSort = tbl.tHead.getAttribute("sortOrder").split(",");
+        if (tbl.tHead.getAttribute("data-sortOrder")) {
+            hSort = tbl.tHead.getAttribute("data-sortOrder").split(",");
             for (var i=0; i<hSort.length; i++) {
                 aSort.push({cellIndex: hSort[i], dir: tbl.hCells[hSort[i]].getSort()});
             }
@@ -58,14 +58,14 @@ jTable.t = function(tDom) {
 	}
 	//update sort attributes
 	for (var i=0; i < tbl.hCells.length; i++) {
-	    tbl.hCells[i].removeAttribute("sort");
+	    tbl.hCells[i].removeAttribute("data-sort");
 	}
 	var sortOrder = [];
 	for (var i=0; i < aSort.length; i++)  {
-	    tbl.hCells[aSort[i].cellIndex].setAttribute("sort", aSort[i].dir);
+	    tbl.hCells[aSort[i].cellIndex].setAttribute("data-sort", aSort[i].dir);
 	    sortOrder.push(aSort[i].cellIndex)
 	}
-	tbl.tHead.setAttribute("sortOrder", sortOrder.join(","));
+	tbl.tHead.setAttribute("data-sortOrder", sortOrder.join(","));
 	if (aSort.length == 0) {
 	    return tbl;
 	}
@@ -153,10 +153,10 @@ jTable.t = function(tDom) {
     }
     tbl.setFilter = function(filters) {
 	for (var i=0; i<tbl.hCells.length; i++) {
-	    tbl.hCells[i].removeAttribute("filter")
+	    tbl.hCells[i].removeAttribute("data-filter")
 	}
 	for (var i=0; i<filters.length; i++) {
-	    tbl.hCells[filters[i].cellIndex].setAttribute("filter", filters[i].filter);	            
+	    tbl.hCells[filters[i].cellIndex].setAttribute("data-filter", filters[i].filter);	            
 	}
 	//iterate through each row, put filter in then remove if necessary
 	var rows = tbl.tBodies[0].rows;
@@ -195,7 +195,7 @@ jTable.h = function(hDom) {
     }
     //then, return a new object based on the header DOM but with more methods
     rHead.getSort = function() {
-    	return rHead.getAttribute("sort");
+    	return rHead.getAttribute("data-sort");
     }
     rHead.setSort = function(dir) {
         if (dir) {
@@ -279,7 +279,7 @@ jTable.h = function(hDom) {
 	return rHead;
     }
     rHead.getFilter = function() {
-        var isRegExp = /^\/(.+)\/$/.exec(rHead.getAttribute("filter")) 
+        var isRegExp = /^\/(.+)\/$/.exec(rHead.getAttribute("data-filter")) 
         if (isRegExp) {
             return new RegExp(isRegExp[1]);
         }
@@ -287,10 +287,10 @@ jTable.h = function(hDom) {
     rHead.setFilter = function(f) {
         var t = jTable.t(rHead);
         if (f) {
-            rHead.setAttribute("filter", f);
+            rHead.setAttribute("data-filter", f);
         }
         else {
-            rHead.removeAttribute("filter");
+            rHead.removeAttribute("data-filter");
         }
         t.setFilter(t.getFilter());
         return rHead;
