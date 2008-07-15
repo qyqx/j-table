@@ -5,7 +5,7 @@ You create a new object by passing it a single parameter, _cell_. _cell_ can be 
 
 jTable.h represents <th> elements inside the <thead> section of a table - in other words, the column headings.
 
-For example, using our standard [introduction example table]:
+For example, using our standard [Introduction example table]:
 
 {{{
 var a = jTable.h('tbl_thead_th1');
