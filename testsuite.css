@@ -35,14 +35,14 @@ table {border:1px solid black; margin:0px; border-collapse:collapse;}
 th {font-weight:bold; background: #CCCCCC; padding:0px; margin:0px; border:1px solid black;}
 td {padding:0px; border:1px solid black; margin:0px;}
 thead th {background-repeat:no-repeat; background-position:center right; 
-	background-image:url(nosort-nofilter.jpg); padding-right:20px;}
-thead th[data-sort='up'] {background-image:url(sortup-nofilter.jpg);}
-thead th[data-sort='down'] {background-image:url(sortdown-nofilter.jpg);}
-thead th[data-filter] {background-image:url(nosort-filter.jpg);}
-thead th[data-filter][data-sort='up'] {background-image:url(sortup-filter.jpg);}
-thead th[data-filter][data-sort='down'] {background-image:url(sortdown-filter.jpg);}
+	background-image:url(testsuite_images/nosort-nofilter.jpg); padding-right:20px;}
+thead th[data-sort='up'] {background-image:url(testsuite_images/sortup-nofilter.jpg);}
+thead th[data-sort='down'] {background-image:url(testsuite_images/sortdown-nofilter.jpg);}
+thead th[data-filter] {background-image:url(testsuite_images/nosort-filter.jpg);}
+thead th[data-filter][data-sort='up'] {background-image:url(testsuite_images/sortup-filter.jpg);}
+thead th[data-filter][data-sort='down'] {background-image:url(testsuite_images/sortdown-filter.jpg);}
 tr.filtered {display:none;}
-caption {background: url(table-transform.jpg) no-repeat center right;}
+caption {background: url(testsuite_images/table-transform.jpg) no-repeat center right;}
 td div, th div {outline:1px solid blue;}
 
 /*barchart*/
