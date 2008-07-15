@@ -1,1 +1,70 @@
-A reference for the jTable.h() object
+jTable.h returns a DOM table cell object for <th> elements that's extended with useful members for sorting, filtering and hiding the column.
+
+==Initialisation==
+You create a new object by passing it a single parameter, _cell_. _cell_ can be a string containing the id of the th cell or of any element inside the cell. Or, you could also set _cell_ to the table cell DOM object. If no such id or object is found, then the object is set to {{{undefined}}}.
+
+jTable.h represents <th> elements inside the <thead> section of a table - in other words, the column headings.
+
+For example, using our standard [introduction example table]:
+
+{{{
+var a = jTable.h('tbl_thead_th1');
+var b = jTable.h(document.getElementById('tbl_thead_th1'));
+var c = jTable.h('tbl');
+//a and b refer to the same object; c is undefined
+}}}
+
+==Members==
+At root, jTable.h is a DOM table cell object, so [http://www.w3.org/TR/DOM-Level-2-HTML/html.html#ID-64060425 normal methods] like {{{jTable.h('tbl_thead_th1').cellIndex}}} will work fine.
+
+===getSort()===
+getSort() is a member function that accepts no parameters and returns one of three values: 'up', if the column is sorted up; 'down' if the column is sorted down; and {{{undefined}}} if there is no sort. 
+
+Example: {{{jTable.h('tbl_thead_th1').getSort();}}}
+
+===setSort(dir)===
+setSort(dir) is a member function that sorts the table by this header cell, using the direction passed as a paramter. You can pass 'up' to sort the column up, 'down' to sort the column down, or {{{undefined}}} to remove any sort. We use a comb sort, O(n log n).
+
+Example: {{{jTable.h('tbl_thead_th1').setSort('up');}}}
+
+setSort returns the revised jTable.h object.
+
+===dataType()===
+dataType() is a member function that accepts no parameters and returns a calculated value that indicates the data type for this column in the table. Current data types are "string" and "number". The value is calculated by matching cells in the column against regular expressions.
+
+Example: {{{jTable.h('tbl_thead_th1').dataType(); //returns 'number'}}}
+
+===getHide()===
+getHide() is a member function that accepts no parameters and returns a boolean value indicating whether the column represented by this header cell is hidden or not. 
+
+Example: {{{jTable.h('tbl_thead_th1').getHide(); //returns true or false}}}
+
+===setHide(hide)===
+setHide(hide) is a member function that accepts a boolean parameter, _hide_, indicating whether the column represented by the table header should be hidden or not.
+
+Example: {{{jTable.h('tbl_thead_th1').setHide(true); //this hides the second column}}}
+
+setHide returns the revised jTable.h object.
+
+===getFilter()===
+getFilter() is a member function that accepts no parameters and returns a regular expression object indicating the filter on the column represented by the table header. If no filter is currently in place, getFilter returns {{{undefined}}}.
+
+Example: {{{jTable.h('tbl_thead_th1').getFilter();}}
+
+===setFilter(filterRegExp)===
+setFilter(filterRegExp) is a member function that sets a filter on the column indicated by the table header. You pass it a single parameter, a regular expression. Every row in the table that does not meet this regular expression is hidden.
+
+Example: {{{jTable.h('tbl_thead_th1').setFilter(/^100$/); //filters all rows that don't contain the exact string "100" in this column}}}
+
+setFilter returns the revised jTable.h object.
+
+===getUniqueValues===
+getUniqueValues is a utility function that returns a list, sorted in ascending order with no duplicates, of every value in the column represented by the table header.
+
+Example: {{{jTable.h('tbl_thead_th1').getUniqueValues(); // returns [100]}}}
+
+
+==Notes==
+Every "setter" member function returns the header object, so you can chain them.
+
+Example: {{{jTable.h('tbl_thead.th1').setSort('up').setFilter(/^100$/).setHide(false)}}}
