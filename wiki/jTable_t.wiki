@@ -29,6 +29,7 @@ Example: {{{jTable.t('tbl').getSort(); // this might return [{cellIndex: 0, dir:
 setSort(aSort) is a member function that sorts the table according to the parameter passed. aSort is an array of objects like {cellIndex: x, dir: y}. Here, x represents the header cellIndex, and y can be 'up' or 'down' depending on the sort direction. You can sort on multiple headers by passing more than one value in the array.
 
 Example 1: {{{jTable.t('tbl').setSort([{cellIndex: 0, dir: 'up'}]); // this sorts the table by the first column in ascending order}}}
+
 Example 2: {{{jTable.t('tbl').setSort([{cellIndex: 0, dir: 'up'}, {cellIndex: 1, dir: 'down'}]); // this sorts the table by the first column in ascending order, and then by the second column in descending order}}}
 
 setSort returns the revised jTable.t object.
@@ -59,6 +60,7 @@ Example: {{{jTable.t('tbl').getFilter(); // this might return [{cellIndex: 0, fi
 setFilter(filters) is a member function that sets a filter on each column indicated in the {{{filters}}} array. You pass it an array of objects of the form {cellIndex: x, filter: y} where x is the cellIndex filtered and y is a regular expression. 
 
 Example 1: {{{jTable.t('tbl').setFilter([{cellIndex: 1, filter: /^100$/}]); //filters just the second column for the exact string "100"}}}
+
 Example 2: {{{jTable.t('tbl').setFilter([{cellIndex: 1, filter: /^100$/}, {cellIndex: 2, filter: /^80$/}]); //filters the second column for the exact string "100" and the third column for the exact string "80"}}}
 
 setFilter returns the revised jTable.h object.
