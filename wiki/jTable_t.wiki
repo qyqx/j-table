@@ -1,1 +1,69 @@
-A reference for the jTable.t object
+jTable.t returns a DOM table object for <table> elements that's extended with useful members for sorting, filtering and hiding the columns.
+
+==Initialisation==
+You create a new object by passing it a single parameter, _cell_. _cell_ can be a string containing the id of the tabls or of any element inside it. Or, you could also set _cell_ to the table DOM object. If no such id or object is found, then the object is set to {{{undefined}}}.
+
+For example, using our standard [Introduction example table]:
+
+{{{
+var a = jTable.t('tbl');
+var b = jTable.t(document.getElementById('tbl'));
+var c = jTable.t('tbl_thead_th1');
+//a, b and c refer to the same object
+}}}
+
+==Members==
+At root, jTable.t is a [http://developer.mozilla.org/en/docs/DOM:table DOM table object], so normal methods like {{{jTable.t('tbl_thead_th1').tHead}}} will work fine.
+
+===hCells===
+hCells is an array containing all the table headers (i.e. <th> elements inside the <thead>), extended using [jTable_h jTable.h]. It's a utility function for accessing the headers and connecting between jTable.t and jTable.h.
+
+Example: {{{jTable.t('tbl').hCells[0].getSort() // uses the getSort() member of jTable.h}}}
+
+===getSort()===
+getSort() is a member function that accepts no parameters and returns an array representing the sort state of each table header. Headers not sorted are left out of the array, which consists of objects like {cellIndex: x, dir: y}. Here, x represents the header cellIndex, and y can be 'up' or 'down' depending on the sort direction.
+
+Example: {{{jTable.t('tbl').getSort(); // this might return [{cellIndex: 0, dir: 'up'}] if only the first column is sorted, and it is sorted up}}}
+
+===setSort(aSort)===
+setSort(aSort) is a member function that sorts the table according to the parameter passed. aSort is an array of objects like {cellIndex: x, dir: y}. Here, x represents the header cellIndex, and y can be 'up' or 'down' depending on the sort direction. You can sort on multiple headers by passing more than one value in the array.
+
+Example 1: {{{jTable.t('tbl').setSort([{cellIndex: 0, dir: 'up'}]); // this sorts the table by the first column in ascending order}}}
+Example 2: {{{jTable.t('tbl').setSort([{cellIndex: 0, dir: 'up'}, {cellIndex: 1, dir: 'down'}]); // this sorts the table by the first column in ascending order, and then by the second column in descending order}}}
+
+setSort returns the revised jTable.t object.
+
+===dataType()===
+dataType() is a member function that accepts no parameters and returns an array of data types, one for each header in the table. Possible data types are "string" and "number". The value is calculated by matching cells in the column against regular expressions.
+
+Example: {{{jTable.t('tbl').dataType(); //returns ['string', 'number', 'number', 'number', 'number']}}}
+
+===getHide()===
+getHide() is a member function that accepts no parameters and returns an array of each of the cellIndexes that are currently hidden. 
+
+Example: {{{jTable.t('tbl').getHide(); //returns [1,2] if the second and third columns are currently hidden}}}
+
+===setHide(hide)===
+setHide(hide) is a member function that accepts an array of cellIndexes that should be hidden. All cellIndexes not in the array are unhidden. 
+
+Example: {{{jTable.t('tbl').setHide([1,2]); //this hides the second and third columns, and shows all the others}}}
+
+setHide returns the revised jTable.t object.
+
+===getFilter()===
+getFilter() is a member function that accepts no parameters and returns an array representing all the filters currently active on the table. Each object in the array is of the form {cellIndex: x, filter: y} where x is the cellIndex filtered and y is a regular expression. If no filter is currently in place, getFilter returns {{{[]}}}.
+
+Example: {{{jTable.t('tbl').getFilter(); // this might return [{cellIndex: 0, filter: /^USA$/}] if the first column is the only filter, and the filter is for the string "USA"}}}
+
+===setFilter(filters)===
+setFilter(filters) is a member function that sets a filter on each column indicated in the {{{filters}}} array. You pass it an array of objects of the form {cellIndex: x, filter: y} where x is the cellIndex filtered and y is a regular expression. 
+
+Example 1: {{{jTable.t('tbl').setFilter([{cellIndex: 1, filter: /^100$/}]); //filters just the second column for the exact string "100"}}}
+Example 2: {{{jTable.t('tbl').setFilter([{cellIndex: 1, filter: /^100$/}, {cellIndex: 2, filter: /^80$/}]); //filters the second column for the exact string "100" and the third column for the exact string "80"}}}
+
+setFilter returns the revised jTable.h object.
+
+==Notes==
+Every "setter" member function returns the header object, so you can chain them.
+
+Example: {{{jTable.t('tbl').setSort([{cellIndex: 0, dir: 'up'}]).setFilter([{cellIndex: 1, filter: /^100$/}]).setHide([3])}}}
