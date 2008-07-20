@@ -159,17 +159,23 @@ function mDown(e) {
     var tbl = jTable.t(t);
     var h = jTable.h(t);
     var c = jTable.c(t);
+    var tblOffsetLeft = 0;
+    var tempTbl = tbl;
+    while (tempTbl && !isNaN(tempTbl.offsetLeft)) {
+        tblOffsetLeft += tempTbl.offsetLeft;
+        tempTbl = tempTbl.parentNode
+    }
     //remove all editCells;
-    while (document.getElementById("editCell")) {
+    while (jTable.c('editCell')) {
         jTable.c('editCell').setEditMode(false);
     }        
     //is it the sort/filter option in the header cell?
     if (h) {
-        if (e.clientX > (h.offsetLeft + h.offsetWidth + tbl.offsetLeft - 10)) {
+    	if (e.clientX > (h.offsetLeft + h.offsetWidth + tblOffsetLeft - 10)) {
             objColOptions.open(t);
 	    return;
-	} else if (e.clientX > (h.offsetLeft + h.offsetWidth + tbl.offsetLeft - 20) &&
-   	 e.clientX < (h.offsetLeft + h.offsetWidth + tbl.offsetLeft - 10)) {
+	} else if (e.clientX > (h.offsetLeft + h.offsetWidth + tblOffsetLeft - 20) &&
+   	 e.clientX < (h.offsetLeft + h.offsetWidth + tblOffsetLeft - 10)) {
    	    if (e.ctrlKey) {
    	        if (!h.getSort()) {
    	            tbl.setSort(tbl.getSort().concat([{cellIndex: h.cellIndex, 'dir': 'up'}]));
@@ -186,7 +192,9 @@ function mDown(e) {
 	return;
     }
     //ok so it's a normal cell, let's edit it
-    if (c) {
+    if (c && !c.getEditMode()) {
 	c.setEditMode(true);
+	//alert(c.innerHTML);
+	c.getElementsByTagName("div")[0].focus();
     }
 }

@@ -1,5 +1,5 @@
 /*general*/
-#divContent {width:100%; background-color:#EEEEEE; float:left; clear:left;}
+#divContent {width:100%; background-color:#EEEEEE; }
 #divT {padding:5px; width:400px; height:250px; border:2px;}
 
 /*column options*/
@@ -31,11 +31,11 @@ div.tableOptions span {margin-left:5px; display:block}
 #tabContents button:hover {outline:1px outset black;}
 
 /*table*/
-table {border:1px solid black; margin:0px; border-collapse:collapse;}
+table {border:1px solid black; margin:0px; border-collapse:collapse; float:left; clear:left;}
 th {font-weight:bold; background: #CCCCCC; padding:0px; margin:0px; border:1px solid black;}
 td {padding:0px; border:1px solid black; margin:0px;}
 thead th {background-repeat:no-repeat; background-position:center right; 
-	background-image:url(testsuite_images/nosort-nofilter.jpg); padding-right:20px;}
+	background-image:url(testsuite_images/nosort-nofilter.jpg); padding-right:22px;}
 thead th[data-sort='up'] {background-image:url(testsuite_images/sortup-nofilter.jpg);}
 thead th[data-sort='down'] {background-image:url(testsuite_images/sortdown-nofilter.jpg);}
 thead th[data-filter] {background-image:url(testsuite_images/nosort-filter.jpg);}
@@ -43,7 +43,7 @@ thead th[data-filter][data-sort='up'] {background-image:url(testsuite_images/sor
 thead th[data-filter][data-sort='down'] {background-image:url(testsuite_images/sortdown-filter.jpg);}
 tr.filtered {display:none;}
 caption {background: url(testsuite_images/table-transform.jpg) no-repeat center right;}
-td div, th div {outline:1px solid blue;}
+td div, th div {outline:1px solid blue; width:100%; height:1em}
 
 /*barchart*/
 svg {fill:none; stroke:black; stroke-width:1; width:100%; height:100%;}

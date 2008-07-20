@@ -37,9 +37,9 @@
 			<li><button onclick="menu.style('fontSize', 5)" title="font size" style="font-size:x-small">TT</button></li>
 			<li><button onclick="menu.style('foreColor', 'red')" title="font color" style="color:red">F</button></li>
 			<li><button onclick="menu.style('hiliteColor', 'red')" title="highlight" style="background-color:yellow">H</button></li>
-			<li><button onclick="menu.style('justifyLeft')" title="align left">&larr</button></li>
-			<li><button onclick="menu.style('justifyRight')" title="align right">&rarr</button></li>
-			<li><button onclick="menu.style('justifyCenter')" title="justify">&harr</button></li>
+			<li><button onclick="menu.style('justifyLeft')" title="align left">&laquo;</button></li>
+			<li><button onclick="menu.style('justifyRight')" title="align right">&raquo;</button></li>
+			<li><button onclick="menu.style('justifyCenter')" title="justify">&laquo;&raquo;</button></li>
 			<li><button onclick="" title="border" style="border:1px solid red">B</button></li>
 			<li><button onclick="menu.style('backColor', 'yellow')" title="background" style="background-color:yellow">B</button></li>
 		</ul>
@@ -58,47 +58,45 @@
 	</div>
 </div>
 
-<table id="firstTable" style="display:none">
-	<tr id="firstTableRow"><th id="firstTableCell"></th></tr>
+<table id="firstTable">
+	<tr id="firstTableRow"><th id="firstTableCell"><div contenteditable="true">hello</div></th></tr>
 </table>
 
-<div id="divContent" onmousedown="mDown(event)">
-	<table id="testTable" viewas="table">
-	  <caption>Joe Blogs Sales (2006)</caption>
-	  <thead>
-	    <tr>
-	      <th>Country</th>
-	      <th id="testColHeader">Q1</th>
-	      <th id="testColHeader2">Q2</th>
-	      <th>Q3</th>
-	      <th>Q4</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-	    <tr>
-	      <th>USA</th>
-	      <td>100</td>
-	      <td>80</td>
-	      <td>110</td>
-	      <td>150</td>
-	    </tr>
-	    <tr>
-	      <th>UK</th>
-	      <td>50</td>
-	      <td>70</td>
-	      <td>120</td>
-	      <td>130</td>
-	    </tr>
-	    <tr>
-	      <th>France</th>
-	      <td>60</td>
-	      <td>80</td>
-	      <td>90</td>
-	      <td>90</td>
-	    </tr>
-	  </tbody>
-	</table>
-</div>
+<table id="testTable" onmousedown="mDown(event)">
+    <caption>Joe Blogs Sales (2006)</caption>
+    <thead>
+	<tr>
+	    <th>Country</th>
+	    <th id="testColHeader">Q1</th>
+	    <th id="testColHeader2">Q2</th>
+	    <th>Q3</th>
+	    <th>Q4</th>
+	</tr>
+    </thead>
+    <tbody>
+	<tr>
+	    <th>USA</th>
+	    <td>100</td>
+	    <td>80</td>
+	    <td>110</td>
+	    <td>150</td>
+	</tr>
+	<tr>
+	    <th>UK</th>
+	    <td>50</td>
+	    <td>70</td>
+	    <td>120</td>
+	    <td>130</td>
+	</tr>
+	<tr>
+	    <th>France</th>
+	    <td>60</td>
+	    <td>80</td>
+	    <td>90</td>
+	    <td>90</td>
+	</tr>
+  </tbody>
+</table>
 
 <div id="colOptions" class="tableOptions">
 	<h3>Heading</h3>
@@ -157,42 +155,6 @@
 	  	<input type="button" id="TableOptionsCancel" value="Cancel" onclick="tableTransform.close()">
     </div>
 </div>
-
-<script>
-/*
-* Object Model
-*
-* jTable() is the top level object / namespace.
-* jTable.t() represents a table object
-*	jTable.t(DOM object) returns a jTable.t() object using the relevant DOM object
-* 		DOM Object can be the table itself or any element within it
-* 	jTable.t().getSort() returns an array of objects of the form {cellIndex: n, dir: "dir"}
-*		the array represents the current sort on the table, ordered as per the array
-* 	jTable.t().setSort([{obj}]) sorts the table and returns the new sort array
-* 		{obj} is of the form {cellIndex: 2, sort: "up"}.
-*		you can pass an array of {obj}s, in which case the sorts are done in array order
-*	jTable.t().getHide() returns an array of all cellIndexes that are currently hidden
-*	jTable.t().setHide([]) hides / unhides certain columns using the array, and returns the array
-*		the array has one entry per hidden cellIndex. Any missing cellIndexes are unhidden.
-*	jTable.t().getFilter() returns an array of objects of the form {cellIndex: n, filterIn: []}
-* 	jTable.t().setFilter([{obj}]) sets filters on a number of columns
-*		every array item represents the filter on a particular column
-*	jTable.t().dataType() returns an array representing the data type of each cellIndex
-* jTable.$() is the getDocumentById function as per prototype and jQuery
-* jTable.h() represents a table header cell
-*	jTable.h(DOM object) returns a jTable.t() object using the relevant DOM object
-* 		DOM Object can be the table itself or any element within it
-* 		DOM Object can also be an array of DOM objects, in which case t() returns an array of results
-* 	jTable.h().getSort() returns either "", "up" or "down" depending on the sort on that column
-* 	jTable.h().setSort(dir) sorts the column, wipes other column sorts and returns dir
-*	jTable.h().getHide() returns true if the column is hidden, otherwise it returns false
-*	jTable.h().setHide(true|fasle) hides / unhides the column
-*	jTable.h().getFilter() returns an objects of the form {cellIndex: n, filterIn: []}
-* 	jTable.h().setFilter({obj}) sets filters on the column
-*		the cellIndex property is not required and automatically calculated if missing.
-*	jtable.h().dataType() returns the calculated data type of the column
-*/
-</script>
-<script src="testsuite.js"></script>
+<script src="testsuite.js" type="text/javascript"></script>
 </body>
 </html>
