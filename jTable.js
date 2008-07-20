@@ -308,15 +308,17 @@ jTable.h = function(hDom) {
         return values;
     };
     rHead.addColumn = function(dir) {
-        //test if dir is 'left' or 'right'
-        if (!/^(left|right)$/.test(dir)) {
-            throw new TypeError("must pass 'left' or 'right' to jTable.h.addColumn");
+        //left if dir===false, right if dir===true
+        if (typeof dir !== 'boolean') {
+            throw new TypeError("must pass boolean to jTable.h.addColumn");
         }
         var rows = jTable.t(rHead).tBodies[0].rows;
         var cellIndex = rHead.cellIndex;
-        rHead.parentNode.insertBefore(document.createElement("th"), dir === 'left' ? rHead : rHead.nextSibling);
+        var th = document.createElement("th");
+        var td = document.createElement("td");
+        rHead.parentNode.insertBefore(th, dir ? rHead.nextSibling : rHead);
         for (var i=0; i<rows.length; i++) {
-            rows[i].insertBefore(document.createElement("td"), dir === 'left' ? rows[i].cells[cellIndex] : rows[i].cells[cellIndex].nextSibling);
+            rows[i].insertBefore(td.cloneNode(true), dir ? rows[i].cells[cellIndex].nextSibling : rows[i].cells[cellIndex]);
         }
     };
     return rHead;
@@ -324,7 +326,7 @@ jTable.h = function(hDom) {
 jTable.c = function(cDom) {
     //first,check the cDom type and raise a TypeError if appropriate
     var cell = (typeof cDom === "string") ? document.getElementById(cDom) : cDom;
-    if (cell === undefined) {
+    if (cell === undefined || cell === null) {
         return undefined;
     }
     while (cell.tagName.toLowerCase().search(/^th|td$/) === -1 && cell.tagName.toLowerCase() !== 'body') {
@@ -344,7 +346,8 @@ jTable.c = function(cDom) {
                 div.appendChild(cell.removeChild(cell.childNodes[0]));
             }
             cell.appendChild(div);
-	   //warning: this could create duplicates
+            div.focus();
+ 	    //warning: this could create duplicates
 	    if (cell.id) {
 	        cell.setAttribute("old_id", cell.id);
 	    }
@@ -370,6 +373,7 @@ jTable.c = function(cDom) {
                 cell.removeAttribute("id");
             }
         }
+        //alert(cell.innerHTML);
         return cell;
     };
     cell.getEditMode = function() {

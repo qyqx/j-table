@@ -204,6 +204,13 @@ var tc_jTable_c_editmode = new YAHOO.tool.TestCase({
 	    this.data.setEditMode(false);
 	}
 });
+var tc_jTable_h_addcolumn = new YAHOO.tool.TestCase({
+	name: "jTable.h.addColumn",
+	testAddColumn: function () {
+	    jTable.h('testColHeader').addColumn(false);
+	    jTable.h('testColHeader').addColumn(true);
+	}
+});
 YAHOO.tool.TestRunner.add(tc_jTable_t);
 YAHOO.tool.TestRunner.add(tc_jTable_h);
 YAHOO.tool.TestRunner.add(tc_jTable_t_sort);
@@ -215,5 +222,6 @@ YAHOO.tool.TestRunner.add(tc_jTable_h_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_t_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_c);
 YAHOO.tool.TestRunner.add(tc_jTable_c_editmode);
+YAHOO.tool.TestRunner.add(tc_jTable_h_addcolumn);
 var oLogger = new YAHOO.tool.TestLogger(); 
 YAHOO.tool.TestRunner.run();
