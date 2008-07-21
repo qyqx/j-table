@@ -13,6 +13,7 @@ var objColOptions = new function() {
 	//position box and create content
 	document.getElementsByName("sort")[0].checked = (colHead.getSort() == 'up');
 	document.getElementsByName("sort")[1].checked = (colHead.getSort() == 'down');
+	document.getElementById('chkDelete').checked = false;
 	divColOptions.style.left = colHead.offsetLeft + colHead.offsetWidth + colTable.offsetLeft + "px";
 	divColOptions.style.top = colHead.offsetTop + colTable.offsetTop + "px";
 	divColOptions.getElementsByTagName('h3')[0].innerHTML = colH.innerHTML;
@@ -61,6 +62,16 @@ var objColOptions = new function() {
 	//hide
 	if (document.getElementById('chkHide').checked) {
 	    colHead.setHide(true);
+	}
+	//add Col
+	if (document.getElementById('addColLeft').checked) {
+	    colHead.addColumn(false);
+	}
+	if (document.getElementById('addColRight').checked) {
+	    colHead.addColumn(true);
+	}
+	if (document.getElementById('chkDelete').checked) {
+	    colHead.deleteColumn();
 	}
 	document.getElementById('colOptions').style.display = 'none';
 	document.getElementById("chkHide").checked = false;

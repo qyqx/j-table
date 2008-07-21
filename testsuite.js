@@ -204,11 +204,17 @@ var tc_jTable_c_editmode = new YAHOO.tool.TestCase({
 	    this.data.setEditMode(false);
 	}
 });
-var tc_jTable_h_addcolumn = new YAHOO.tool.TestCase({
-	name: "jTable.h.addColumn",
+var tc_jTable_h_addremovecolumn = new YAHOO.tool.TestCase({
+	name: "jTable.h.addRemoveColumn",
 	testAddColumn: function () {
 	    jTable.h('testColHeader').addColumn(false);
 	    jTable.h('testColHeader').addColumn(true);
+	    assert.areEqual(jTable.t('testColHeader').hCells.length, 7, "jTable.h.addColumn didn't increment the header count");
+	},
+	testRemoveColumn: function() {
+	    jTable.h(jTable.h('testColHeader').nextSibling).deleteColumn();
+	    jTable.h(jTable.h('testColHeader').previousSibling).deleteColumn();
+	    assert.areEqual(jTable.t('testColHeader').hCells.length, 5, "jTable.h.addColumn didn't decrement the header count");
 	}
 });
 YAHOO.tool.TestRunner.add(tc_jTable_t);
@@ -222,6 +228,6 @@ YAHOO.tool.TestRunner.add(tc_jTable_h_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_t_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_c);
 YAHOO.tool.TestRunner.add(tc_jTable_c_editmode);
-YAHOO.tool.TestRunner.add(tc_jTable_h_addcolumn);
+YAHOO.tool.TestRunner.add(tc_jTable_h_addremovecolumn);
 var oLogger = new YAHOO.tool.TestLogger(); 
 YAHOO.tool.TestRunner.run();
