@@ -58,8 +58,8 @@
 	</div>
 </div>
 
-<table id="firstTable">
-	<tr id="firstTableRow"><th id="firstTableCell"><div contenteditable="true">hello</div></th></tr>
+<table id="firstTable" style="display:none">
+	<tr id="firstTableRow"><th id="firstTableCell"></th></tr>
 </table>
 
 <table id="testTable" onmousedown="mDown(event)">
@@ -120,6 +120,24 @@
 		<span class="divOption">
 			<input type="checkbox" id="chkHide" name="fake" value="hide">
 			<label for="chkHide">Hide column</label>
+	  	</span>
+	</div>
+	<div id="colOptionsAddCol">
+	    <h4>Add Column:</h4>
+	  	<span class="divOption">
+			<input type="checkbox" name="addCol" id="addColLeft" value="false"/>
+			<label for="sort_ascending">to the left</label>
+	  	</span>
+	  	<span class="divOption">
+			<input type="checkbox" name="addCol" id="addColRight" value="true"/>
+			<label for="sort_descending">to the right</label>
+	  	</span>
+	</div>
+	<div id="colOptionsDelete">
+		<h4>Delete:</h4>
+		<span class="divOption">
+			<input type="checkbox" id="chkDelete" name="fake" value="false">
+			<label for="chkDelete">Delete column</label>
 	  	</span>
 	</div>
 	<div id="colOptionsOKCancel">

@@ -207,8 +207,19 @@ jTable.h = function(hDom) {
         return rHead;
     };
     rHead.dataType = function() {
+        var answer;
+        if (rHead.getAttribute("data-datatype")) {
+            return rHead.getAttribute("data-datatype")
+        } else {
+            answer = rHead.calculateDataType();
+            rHead.setAttribute("data-datatype", answer);
+            return answer;
+        }
+    };
+    rHead.calculateDataType = function() {
 	//check data type of first entry. then check if all others consistent, if not then string.
-	var dataTypes = [{dataType: "number", re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i}];
+	var dataTypes = [{dataType: "number", re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i},
+	    {dataType: "currency", re: /^-?\d+(?:\.\d*)?$/i}];
 	var cellIndex = this.cellIndex;
 	var rows = jTable.t(this).tBodies[0].rows;
 	var dataType, dataType_old;
@@ -320,6 +331,14 @@ jTable.h = function(hDom) {
         for (var i=0; i<rows.length; i++) {
             rows[i].insertBefore(td.cloneNode(true), dir ? rows[i].cells[cellIndex].nextSibling : rows[i].cells[cellIndex]);
         }
+    };
+    rHead.deleteColumn = function() {
+        var cellIndex = rHead.cellIndex;
+        var rows = jTable.t(rHead).tBodies[0].rows;
+        for (var i=0; i<rows.length; i++) {
+            rows[i].removeChild(rows[i].cells[cellIndex]);
+        }
+        rHead = rHead.parentNode.removeChild(rHead);
     };
     return rHead;
 };
