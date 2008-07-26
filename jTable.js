@@ -43,18 +43,6 @@ jTable.t = function(tDom) {
 	var tblDataTypes = tbl.dataType();
 	var currentSort = tbl.getSort();
 	var rows = tbl.tBodies[0].rows;
-	var swapTest = function(a, b, direction, type) {
-	    if (a===b) {
-		return 0;
-	    }
-	    var dir = (direction === 'up') ? 1 : -1;
-	    switch (type) {
-		case 'number':
-		    return dir * (Number(a) > Number(b) ? 1 : -1);
-		case 'string':
-		    return dir * (a > b ? 1 : -1);
-	    }
-	};
 	//update sort attributes
 	for (i=0; i < tbl.hCells.length; i++) {
 	    tbl.hCells[i].removeAttribute("data-sort");
@@ -79,6 +67,7 @@ jTable.t = function(tDom) {
 	    var gap = rows.length;
 	    var swapped = true;
 	    var swapResult;
+	    var a, b;
 	    while (gap > 1 || swapped) {
 	    //update the gap value for a next comb
 	        if (gap > 1) {
@@ -89,19 +78,16 @@ jTable.t = function(tDom) {
 	        }
 	        swapped = false;
 	        //a single "comb" over the input list
-	        for (i=0; i + gap < rows.length; i++) {
-	            for (var j=0; j<aSort.length; j++) {
-	                swapResult = swapTest(jTable.c(rows[i].cells[aSort[j].cellIndex]).getTextContent(), jTable.c(rows[i + gap].cells[aSort[j].cellIndex]).getTextContent(), aSort[j].dir, tblDataTypes[aSort[j].cellIndex]);
-	                if (swapResult === -1) {
-	                    break;
-	                }
-	                else if (swapResult === 1) {
+	        for (i=0; i + gap < rows.length; i++) for (var j=0; j<aSort.length; j++) {
+	            a = jTable.c(rows[i].cells[aSort[j].cellIndex]).getTextContent();
+	            b = jTable.c(rows[i + gap].cells[aSort[j].cellIndex]).getTextContent();
+	            if (a !== b) {
+	                if (jTable.dataTypes[tblDataTypes[aSort[j].cellIndex]].swap(a,b) ? aSort[j].dir === 'up' : aSort[j].dir === 'down') {
 	                    var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
-	                    rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
-	                    swapped = true;
-	                    break;
-	                }
-	            
+		            rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
+			    swapped = true;
+	                } 
+	                break;
 	            }
 	        }
 	    }
@@ -218,16 +204,15 @@ jTable.h = function(hDom) {
     };
     rHead.calculateDataType = function() {
 	//check data type of first entry. then check if all others consistent, if not then string.
-	var dataTypes = [{dataType: "number", re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i},
-	    {dataType: "currency", re: /^-?\d+(?:\.\d*)?$/i}];
 	var cellIndex = this.cellIndex;
 	var rows = jTable.t(this).tBodies[0].rows;
 	var dataType, dataType_old;
 	for (var i=0; i<rows.length; i++) {
 	    dataType = "string";
-	    for (var j=0; j<dataTypes.length; j++) {
-	        if (dataTypes[j].re.test(jTable.c(rows[i].cells[cellIndex]).getTextContent())) {
-	            dataType = dataTypes[j].dataType;
+	    for (var j in jTable.dataTypes) if (jTable.dataTypes.hasOwnProperty(j) && j !== 'string') {
+	        if ((!jTable.dataTypes[j].re || jTable.dataTypes[j].re.test(jTable.c(rows[i].cells[cellIndex]).getTextContent())) &&
+	          (!jTable.dataTypes[j].js || jTable.dataTypes[j].js(jTable.c(rows[i].cells[cellIndex]).getTextContent()))) {
+	            dataType = j;
 	            break;
 	        }
 	    }
@@ -391,8 +376,14 @@ jTable.c = function(cDom) {
             } else {
                 cell.removeAttribute("id");
             }
+            //re-calculate the dataType. should only need to do this if incompatible.
+            var head = jTable.t(cell).hCells[cell.cellIndex];
+            head.setAttribute("data-datatype", head.calculateDataType());
+            //if ((jTable.dataTypes[head.dataType()].re && !jTable.dataTypes[head.dataType()].re.test(cell.getTextContent())) ||
+	    //  (jTable.dataTypes[head.dataType()].js && !jTable.dataTypes[head.dataType()].js(cell.getTextContent()))) {
+	    //    head.setAttribute("data-datatype", head.calculateDataType());
+	    //}
         }
-        //alert(cell.innerHTML);
         return cell;
     };
     cell.getEditMode = function() {
@@ -406,4 +397,32 @@ jTable.c = function(cDom) {
         return cell.textContent ? cell.textContent : cell.innerText;    
     };
     return cell;
+};
+jTable.dataTypes = {
+    number: {
+        re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
+        swap: function(a,b) {
+            return Number(a) > Number(b);
+        }
+    },
+    currency: {
+        re: /^-?\d+(?:\.\d*)?$/i,
+        swap: function(a,b) {
+            return Number(a) > Number(b);
+        }
+    },
+    date: {
+        js: function(x) {
+            var scratch = new Date(x); 
+            return scratch.toString() !== 'NaN' && scratch.toString() !== 'Invalid Date';
+        },
+        swap: function(a,b) {
+            return Date.parse(a) > Date.parse(b);
+        }
+    },
+    string: {
+        swap: function(a,b) {
+            return a > b;
+        }
+    }
 };
