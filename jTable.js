@@ -11,13 +11,20 @@ jTable.t = function(tDom) {
     if (tbl.tagName.toLowerCase() === 'body') {
         return undefined;
     }
+    var i,j;
     //then, add utility methods to tbl
     tbl.hCells = [];
     if (tbl.tHead) {
-        for (var i=0; i<tbl.tHead.rows[0].cells.length; i++) {
+        for (i=0; i<tbl.tHead.rows[0].cells.length; i++) {
             tbl.hCells.push(jTable.h(tbl.tHead.rows[0].cells[i]));
         }
     }
+    tbl.headers = function(col) {
+        return tbl.hCells[col].textContent ? tbl.hCells[col].textContent : tbl.hCells[col].innerText;
+    };
+    tbl.data = function(row, col) {
+        return tbl.tBodies[0].rows[row].cells[col].textContent ? tbl.tBodies[0].rows[row].cells[col].textContent : tbl.tBodies[0].rows[row].cells[col].innerText;    
+    };
     tbl.getSort = function () {
         var aSort = [], hSort;
         if (tbl.tHead.getAttribute("data-sortOrder")) {
@@ -79,8 +86,8 @@ jTable.t = function(tDom) {
 	        swapped = false;
 	        //a single "comb" over the input list
 	        for (i=0; i + gap < rows.length; i++) for (var j=0; j<aSort.length; j++) {
-	            a = jTable.c(rows[i].cells[aSort[j].cellIndex]).getTextContent();
-	            b = jTable.c(rows[i + gap].cells[aSort[j].cellIndex]).getTextContent();
+	            a = tbl.data(i, aSort[j].cellIndex);
+	            b = tbl.data(i + gap, aSort[j].cellIndex);
 	            if (a !== b) {
 	                if (jTable.dataTypes[tblDataTypes[aSort[j].cellIndex]].swap(a,b) ? aSort[j].dir === 'up' : aSort[j].dir === 'down') {
 	                    var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
@@ -151,7 +158,7 @@ jTable.t = function(tDom) {
 	    rowpass = true;
 	    for (var j=0; j < filters.length; j++) {
 	    //if any of the filters doesn't match, then mark the row as filtered
-	        if (!filters[j].filter.test(jTable.c(rows[irow].cells[filters[j].cellIndex]).getTextContent())) {
+	        if (!filters[j].filter.test(tbl.data(irow, filters[j].cellIndex))) {
 	            rowpass = false;
 	            break;
 	        }
@@ -179,7 +186,18 @@ jTable.h = function(hDom) {
     if (rHead.tagName.toLowerCase() === 'body') {
         return undefined;
     }
+    var i, temp;
     //then, return a new object based on the header DOM but with more methods
+    temp = rHead;
+    while(temp.tagName.toLowerCase() !== 'table') {
+        temp = temp.parentNode;
+    }
+    rHead.table = temp;
+    rHead.data = function(row) {
+        temp = rHead.table.tBodies[0].rows[row].cells[rHead.cellIndex];
+        return temp.textContent ? temp.textContent : temp.innerText;
+    
+    };
     rHead.getSort = function() {
     	return rHead.getAttribute("data-sort");
     };
@@ -205,13 +223,12 @@ jTable.h = function(hDom) {
     rHead.calculateDataType = function() {
 	//check data type of first entry. then check if all others consistent, if not then string.
 	var cellIndex = this.cellIndex;
-	var rows = jTable.t(this).tBodies[0].rows;
 	var dataType, dataType_old;
-	for (var i=0; i<rows.length; i++) {
+	for (var i=0; i<rHead.table.tBodies[0].rows.length; i++) {
 	    dataType = "string";
 	    for (var j in jTable.dataTypes) if (jTable.dataTypes.hasOwnProperty(j) && j !== 'string') {
-	        if ((!jTable.dataTypes[j].re || jTable.dataTypes[j].re.test(jTable.c(rows[i].cells[cellIndex]).getTextContent())) &&
-	          (!jTable.dataTypes[j].js || jTable.dataTypes[j].js(jTable.c(rows[i].cells[cellIndex]).getTextContent()))) {
+	        if ((!jTable.dataTypes[j].re || jTable.dataTypes[j].re.test(rHead.data(i))) &&
+	          (!jTable.dataTypes[j].js || jTable.dataTypes[j].js(rHead.data(i)))) {
 	            dataType = j;
 	            break;
 	        }
@@ -232,7 +249,7 @@ jTable.h = function(hDom) {
     };
     rHead.getHide = function() {
         var answer = false;
-        var col = jTable.t(rHead).getElementsByTagName("col")[rHead.cellIndex];
+        var col = rHead.table.getElementsByTagName("col")[rHead.cellIndex];
         if (col && (col.style.visibility === 'collapse' || col.style.display === 'none')) {
             answer = true;
         }
@@ -241,18 +258,17 @@ jTable.h = function(hDom) {
     rHead.setHide = function(hide) {
 	var currentHide = rHead.getHide();
 	var cellIndex = rHead.cellIndex;
-	var tbl = jTable.t(rHead);
-	var colgroup = tbl.getElementsByTagName("colgroup")[0];
+	var colgroup = rHead.table.getElementsByTagName("colgroup")[0];
 	//create the colgroup if it doesn't already exist
 	if (!colgroup) {
-	    colgroup = tbl.appendChild(document.createElement("colgroup"));
+	    colgroup = rHead.table.appendChild(document.createElement("colgroup"));
 	}
 	//create the cols if they don't already exist in the right number
-	if (colgroup.getElementsByTagName("col").length !== tbl.hCells.length) {
+	if (colgroup.getElementsByTagName("col").length !== rHead.table.hCells.length) {
 	    for (var i=0; i<colgroup.getElementsByTagName("col").length; i++) {
 	        colgroup.removeChild(colgroup.getElementsByTagName("col")[i]);
 	    }
-	    for (i=0; i<tbl.hCells.length; i++) {
+	    for (i=0; i<rHead.table.hCells.length; i++) {
 	        colgroup.appendChild(document.createElement("col"));
 	    }	
 	}
@@ -294,11 +310,12 @@ jTable.h = function(hDom) {
         //first, create array containing every value
         var values = [];
         var cellIndex = rHead.cellIndex;
-        var cloneTable = jTable.t(jTable.t(rHead).cloneNode(true)).setSort([{cellIndex: cellIndex, dir: 'up'}]);
-        var rows = cloneTable.tBodies[0].rows;
-        for (var i=0; i<rows.length; i++) {
-            if (i===0 || jTable.c(rows[i].cells[cellIndex]).getTextContent() !== jTable.c(rows[i-1].cells[cellIndex]).getTextContent()) {
-                values.push(jTable.c(rows[i].cells[cellIndex]).getTextContent());    
+        //var cloneTable = jTable.t(rHead.table.cloneNode(true)).setSort([{cellIndex: cellIndex, dir: 'up'}]);
+        //var rows = cloneTable.tBodies[0].rows;
+        var colData = jTable.h(rHead.table.cloneNode(true)).setSort('up').data;
+        for (var i=0; i<colData.length; i++) {
+            if (i===0 || colData[i] !== colData[i-1]) {
+                values.push(colData[i]);    
             }
         }
         return values;
@@ -308,7 +325,7 @@ jTable.h = function(hDom) {
         if (typeof dir !== 'boolean') {
             throw new TypeError("must pass boolean to jTable.h.addColumn");
         }
-        var rows = jTable.t(rHead).tBodies[0].rows;
+        var rows = rHead.table.tBodies[0].rows;
         var cellIndex = rHead.cellIndex;
         var th = document.createElement("th");
         var td = document.createElement("td");
@@ -319,7 +336,7 @@ jTable.h = function(hDom) {
     };
     rHead.deleteColumn = function() {
         var cellIndex = rHead.cellIndex;
-        var rows = jTable.t(rHead).tBodies[0].rows;
+        var rows = rHead.table.tBodies[0].rows;
         for (var i=0; i<rows.length; i++) {
             rows[i].removeChild(rows[i].cells[cellIndex]);
         }
@@ -379,10 +396,6 @@ jTable.c = function(cDom) {
             //re-calculate the dataType. should only need to do this if incompatible.
             var head = jTable.t(cell).hCells[cell.cellIndex];
             head.setAttribute("data-datatype", head.calculateDataType());
-            //if ((jTable.dataTypes[head.dataType()].re && !jTable.dataTypes[head.dataType()].re.test(cell.getTextContent())) ||
-	    //  (jTable.dataTypes[head.dataType()].js && !jTable.dataTypes[head.dataType()].js(cell.getTextContent()))) {
-	    //    head.setAttribute("data-datatype", head.calculateDataType());
-	    //}
         }
         return cell;
     };
@@ -392,9 +405,6 @@ jTable.c = function(cDom) {
             return true;
         }
         return false;
-    };
-    cell.getTextContent = function() {
-        return cell.textContent ? cell.textContent : cell.innerText;    
     };
     return cell;
 };
