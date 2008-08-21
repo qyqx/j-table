@@ -77,15 +77,15 @@ var tc_jTable_t_sort = new YAHOO.tool.TestCase({
 	    var tbl = jTable.t('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
 	    assert.areEqual(tbl.getSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
 	    assert.areEqual(tbl.getSort()[0].dir, 'up', "setSort did not respect dir");
-	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[0].cells[0]).getTextContent(), 'UK', 'setSort did not sort correctly');
-	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[1].cells[0]).getTextContent(), 'France', 'setSort did not sort correctly');
+	    assert.areEqual(tbl.data(0, 0), 'UK', 'setSort did not sort correctly');
+	    assert.areEqual(tbl.data(1, 0), 'France', 'setSort did not sort correctly');
 	},
 	testSetMultipleSort: function() {
 	    var tbl = jTable.t('testTable').setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
 	    assert.areEqual(tbl.getSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
 	    assert.areEqual(tbl.getSort()[1].dir, 'up', "setSort did not respect the second dir");
-	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[0].cells[0]).getTextContent(), 'France', 'setSort did not multi-sort correctly');
-	    assert.areEqual(jTable.c(tbl.tBodies[0].rows[1].cells[0]).getTextContent(), 'USA', 'setSort did not multi-sort correctly');    
+	    assert.areEqual(tbl.data(0, 0), 'France', 'setSort did not multi-sort correctly');
+	    assert.areEqual(tbl.data(1, 0), 'USA', 'setSort did not multi-sort correctly');    
 	}
 });
 var tc_jTable_h_sort = new YAHOO.tool.TestCase({
@@ -100,8 +100,8 @@ var tc_jTable_h_sort = new YAHOO.tool.TestCase({
 	testSort: function() {
 	    jTable.h('testColHeader').setSort('up');
 	    assert.areEqual(jTable.h('testColHeader').getSort(), 'up', "getSort did not reflect setSort");
-	    assert.areEqual(jTable.c(jTable.t('testTable').tBodies[0].rows[0].cells[0]).getTextContent(), 'UK', 'setSort did not sort correctly');
-	    assert.areEqual(jTable.c(jTable.t('testTable').tBodies[0].rows[1].cells[0]).getTextContent(), 'France', 'setSort did not sort correctly');
+	    assert.areEqual(this.data.data(0), 'UK', 'setSort did not sort correctly');
+	    assert.areEqual(this.data.data(1), 'France', 'setSort did not sort correctly');
 	}
 });
 var tc_jTable_datatype = new YAHOO.tool.TestCase({
@@ -141,11 +141,11 @@ var tc_jTable_h_filter = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.h('testColHeader').getFilter(), undefined, "jTable.h().getFilter() didn't return an empty object");
 	},
 	testSetFilter: function() {
-	    jTable.h('testColHeader').setFilter(/^50|60$/);
+	    var header = jTable.h('testColHeader').setFilter(/^50|60$/);
 	    var rows = jTable.t('testColHeader').tBodies[0].rows;
 	    var textContent;
-	    for (var i=0; i<rows.length; i++) {
-	        assert.areEqual(rows[i].className.search("filtered") >= 0, jTable.c(rows[i].cells[0]).getTextContent() == "USA", "setFilter didn't filter properly");
+	    for (var i=0; i<jTable.t('testColHeader').tBodies[0].rows.length; i++) {
+	        assert.areEqual(rows[i].className.search("filtered") >= 0, rows[i].cells[0].textContent ? rows[i].cells[0].textContent : rows[i].cells[0].innerText == "USA", "setFilter didn't filter properly");
 	    }
 	}
 });
