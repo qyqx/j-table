@@ -88,7 +88,7 @@ var tableTransform = new function() {
 	tblHide = table.getHide();
 	for (var i=0; i<tblHide.length; i++) {
 	    strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + tblHide[i] + '">';
-	    strUnhide += '<label for="chkHide' + i + '">' + table.hCells[tblHide[i]].getTextContent() + '</label></span>';
+	    strUnhide += '<label for="chkHide' + i + '">' + table.headData(tblHide[i]) + '</label></span>';
 	}
 	if (strUnhide == "") {
 	    strUnhide = '<span class="divOption"><input type="checkbox" id="chk_nonehidden" disabled><label for="chk_nonehidden">No columns hidden</label></span>';

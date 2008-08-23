@@ -91,17 +91,18 @@ var tc_jTable_t_sort = new YAHOO.tool.TestCase({
 var tc_jTable_h_sort = new YAHOO.tool.TestCase({
 	name: "jTable.h.sort",
 	setUp : function () {
-	    this.data = jTable.h('testColHeader').getSort();
+	    this.data = jTable.h('testColHeader');
 	},
 	tearDown : function () {
 	    delete this.data;
+	    delete this.sort;
 	    jTable.h('testColHeader').setSort();
 	},
 	testSort: function() {
 	    jTable.h('testColHeader').setSort('up');
-	    assert.areEqual(jTable.h('testColHeader').getSort(), 'up', "getSort did not reflect setSort");
-	    assert.areEqual(this.data.data(0), 'UK', 'setSort did not sort correctly');
-	    assert.areEqual(this.data.data(1), 'France', 'setSort did not sort correctly');
+	    assert.areEqual(this.data.getSort(), 'up', "getSort did not reflect setSort");
+	    assert.areEqual(this.data.data(0), '50', 'setSort did not sort correctly');
+	    assert.areEqual(this.data.data(1), '60', 'setSort did not sort correctly');
 	}
 });
 var tc_jTable_datatype = new YAHOO.tool.TestCase({
@@ -143,9 +144,8 @@ var tc_jTable_h_filter = new YAHOO.tool.TestCase({
 	testSetFilter: function() {
 	    var header = jTable.h('testColHeader').setFilter(/^50|60$/);
 	    var rows = jTable.t('testColHeader').tBodies[0].rows;
-	    var textContent;
-	    for (var i=0; i<jTable.t('testColHeader').tBodies[0].rows.length; i++) {
-	        assert.areEqual(rows[i].className.search("filtered") >= 0, rows[i].cells[0].textContent ? rows[i].cells[0].textContent : rows[i].cells[0].innerText == "USA", "setFilter didn't filter properly");
+	    for (var i = 0; i < rows.length; i++) {
+	        assert.areEqual(rows[i].className.search("filtered") >= 0, header.data(i) === "100", "setFilter didn't filter properly");
 	    }
 	}
 });
@@ -164,7 +164,7 @@ var tc_jTable_t_filter = new YAHOO.tool.TestCase({
 	    var rows = jTable.t('testColHeader').tBodies[0].rows;
 	    var textContent;
 	    for (var i=0; i<rows.length; i++) {
-	        assert.areEqual(rows[i].className.search("filtered") >= 0, jTable.c(rows[i].cells[0]).getTextContent() == "USA", "setFilter didn't filter properly");
+	        assert.areEqual(rows[i].className.search("filtered") >= 0, jTable.t('testTable').data(i, 0) == "USA", "setFilter didn't filter properly");
 	    }
 	}
 });
@@ -209,12 +209,12 @@ var tc_jTable_h_addremovecolumn = new YAHOO.tool.TestCase({
 	testAddColumn: function () {
 	    jTable.h('testColHeader').addColumn(false);
 	    jTable.h('testColHeader').addColumn(true);
-	    assert.areEqual(jTable.t('testColHeader').hCells.length, 7, "jTable.h.addColumn didn't increment the header count");
+	    assert.areEqual(jTable.h('testColHeader').parentNode.cells.length, 7, "jTable.h.addColumn didn't increment the header count");
 	},
 	testRemoveColumn: function() {
 	    jTable.h(jTable.h('testColHeader').nextSibling).deleteColumn();
 	    jTable.h(jTable.h('testColHeader').previousSibling).deleteColumn();
-	    assert.areEqual(jTable.t('testColHeader').hCells.length, 5, "jTable.h.addColumn didn't decrement the header count");
+	    assert.areEqual(jTable.h('testColHeader').parentNode.cells.length, 5, "jTable.h.addColumn didn't decrement the header count");
 	}
 });
 YAHOO.tool.TestRunner.add(tc_jTable_t);

@@ -1,3 +1,99 @@
+var jt = function (elem) {
+    // resolve elem to a <table>, <th> or <td>, otherwise return undefined
+    elem = ((typeof elem) === "string") ? document.getElementById(elem) : elem;
+    if (elem === undefined) {
+        return undefined;
+    } 
+    var i, j;
+    while (!/^body|table|th|td$/.test(elem.tagName.toLowerCase())) {
+        elem = elem.parentNode;
+    }
+    if (elem.tagName.toLowerCase() === 'body') {
+        return undefined;
+    }
+    //shared functions
+    elem.cell = function() {
+        //returns the jt'd <td> element
+        switch (elem.tagName.toLowerCase()) {
+        case "td":
+            return elem;
+            break;
+        case "th":
+            return jt(elem.table.tBodies[0].rows[arguments[0]].cells[elem.cellIndex]);
+            break;
+        case "table":
+            return jt(elem.tBodies[0].rows[arguments[0]].cells[arguments[1]]);
+            break;
+        }
+    }
+    elem.data = function() {
+        //returns the value in the relevant table cell
+        var cell = elem.cell(arguments[0], arguments[1]);
+        return cell.textContent ? cell.textContent : cell.innerText;
+    }
+    if (elem.tagName.toLowerCase() === 'td') {
+        elem.setEditMode = function(ed) {
+            var currentEd = elem.getEditMode();
+            var div;
+            if (ed && !currentEd) {
+                div = document.createElement("div");
+                div.contentEditable = true;
+                while (elem.hasChildNodes()) {
+                    div.appendChild(elem.removeChild(elem.childNodes[0]));
+                }
+                elem.appendChild(div);
+                div.focus();
+                //warning: this could create duplicates
+                if (elem.id) {
+	            elem.setAttribute("old_id", elem.id);
+	        }
+                elem.id = "editCell";
+            } 
+            if (!ed && currentEd) {
+                //find the child div with contentEditable==true
+                for (var i=0; i < elem.childNodes.length; i++) {
+                    if (elem.childNodes[i].nodeType === 1 && elem.childNodes[i].nodeName.toLowerCase() === 'div' && elem.childNodes[i].contentEditable) {
+                        div = elem.childNodes[i];
+                        break;
+                    }            
+                }
+                div.removeAttribute("contentEditable");
+                while (div.hasChildNodes()) {
+                    elem.appendChild(div.removeChild(div.childNodes[0]));
+                }
+                elem.removeChild(div);
+                if (elem.getAttribute("old_id")) {
+                    elem.id = elem.getAttribute("old_id");
+                    elem.removeAttribute("old_id");
+                } else {
+                    elem.removeAttribute("id");
+                }
+                //re-calculate the dataType. should only need to do this if incompatible.
+                var head = jTable.t(elem).headerCells(elem.cellIndex);
+                head.setAttribute("data-datatype", head.calculateDataType());
+            }
+            return elem;
+        };
+        elem.getEditMode = function() {
+            var divs = elem.getElementsByTagName("div");
+            for (var i=0; i < divs.length; i++) if (divs[i].contentEditable) {
+                return true;
+            }
+            return false;
+        };
+        return elem;
+    }
+    if (elem.tagName.toLowerCase() === 'table') {
+        elem.headerCells = function(cellIndex) {
+            return jt(elem.tHead.rows[0].cells[cellIndex]);
+        };
+        elem.headerData = function(cellIndex) {
+            var cell = elem.headerCells(cellIndex);
+            return cell.textContent ? cell.textContent : cell.innerText;
+        };      
+    }
+    return elem;
+};
 var jTable = {};
 jTable.t = function(tDom) {
     //first, create a table object, raising a TypeError if appropriate
@@ -13,24 +109,23 @@ jTable.t = function(tDom) {
     }
     var i,j;
     //then, add utility methods to tbl
-    tbl.hCells = [];
-    if (tbl.tHead) {
-        for (i=0; i<tbl.tHead.rows[0].cells.length; i++) {
-            tbl.hCells.push(jTable.h(tbl.tHead.rows[0].cells[i]));
-        }
-    }
-    tbl.headers = function(col) {
-        return tbl.hCells[col].textContent ? tbl.hCells[col].textContent : tbl.hCells[col].innerText;
+    tbl.headerCells = function(i) {
+        return jTable.h(tbl.tHead.rows[0].cells[i]);
+    };
+    tbl.headData = function(col) {
+        var hCell = tbl.headerCells(col);
+        return hCell.textContent ? hCell.textContent : hCell.innerText;
     };
     tbl.data = function(row, col) {
-        return tbl.tBodies[0].rows[row].cells[col].textContent ? tbl.tBodies[0].rows[row].cells[col].textContent : tbl.tBodies[0].rows[row].cells[col].innerText;    
+        var cell = tbl.tBodies[0].rows[row].cells[col];
+        return cell.textContent ? cell.textContent : cell.innerText;    
     };
     tbl.getSort = function () {
         var aSort = [], hSort;
         if (tbl.tHead.getAttribute("data-sortOrder")) {
             hSort = tbl.tHead.getAttribute("data-sortOrder").split(",");
             for (var i=0; i<hSort.length; i++) {
-                aSort.push({cellIndex: hSort[i], dir: tbl.hCells[hSort[i]].getSort()});
+                aSort.push({cellIndex: hSort[i], dir: tbl.headerCells(hSort[i]).getSort()});
             }
         }
         return aSort;
@@ -51,12 +146,14 @@ jTable.t = function(tDom) {
 	var currentSort = tbl.getSort();
 	var rows = tbl.tBodies[0].rows;
 	//update sort attributes
-	for (i=0; i < tbl.hCells.length; i++) {
-	    tbl.hCells[i].removeAttribute("data-sort");
+	i = 0;
+	while (tbl.headerCells(i)) {
+	    tbl.headerCells(i).removeAttribute("data-sort");
+	    i++;
 	}
 	var sortOrder = [];
 	for (i=0; i < aSort.length; i++)  {
-	    tbl.hCells[aSort[i].cellIndex].setAttribute("data-sort", aSort[i].dir);
+	    tbl.headerCells(aSort[i].cellIndex).setAttribute("data-sort", aSort[i].dir);
 	    sortOrder.push(aSort[i].cellIndex);
 	}
 	tbl.tHead.setAttribute("data-sortOrder", sortOrder.join(","));
@@ -103,15 +200,21 @@ jTable.t = function(tDom) {
     };
     tbl.dataType = function() {
         var answer = [];
-        for (var i=0; i<tbl.hCells.length; i++) {
-            answer.push(tbl.hCells[i].dataType());         
+        var i = 0;
+        while (tbl.headerCells(i)) {
+            answer.push(tbl.headerCells(i).dataType())
+            i++;
         }
         return answer;        
     };
     tbl.getHide = function() {
-        var answer = [];        
-        for (var i=0; i<tbl.hCells.length; i++) if (tbl.hCells[i].getHide()) {
-            answer.push(i);
+        var answer = [];
+        var i = 0;
+        while (tbl.headerCells(i)) {
+            if (tbl.headerCells(i).getHide()) {
+                answer.push(i);
+            }
+            i++;
         }
         return answer;
     };
@@ -130,26 +233,36 @@ jTable.t = function(tDom) {
             }
         }
         for (i=0; i<newHide.length; i++) {
-            tbl.hCells[newHide[i]].setHide(true);
+            tbl.headerCells(newHide[i]).setHide(true);
         }
         for (i=0; i<removeHide.length; i++) {
-	    tbl.hCells[removeHide[i]].setHide(false);
+	    tbl.headerCells(removeHide[i]).setHide(false);
         }
         return tbl;
     };
     tbl.getFilter = function() {
         var answer = [];
-        for (var i=0; i<tbl.hCells.length; i++) if (tbl.hCells[i].getFilter()) {
-             answer.push({cellIndex: i, filter: tbl.hCells[i].getFilter()});
+        var headerCell, headerCellFilter;
+        for (var i = 0; true; i++) {
+            headerCell = tbl.headerCells(i);
+            if (!headerCell) {
+                break;
+            }
+            headerCellFilter = headerCell.getFilter();
+            if (headerCellFilter) {
+                answer.push({cellIndex: i, filter: headerCellFilter});
+            }
         }
         return answer;
     };
     tbl.setFilter = function(filters) {
-	for (var i=0; i<tbl.hCells.length; i++) {
-	    tbl.hCells[i].removeAttribute("data-filter");
+	var i = 0;
+	while (tbl.headerCells(i)) {
+	    tbl.headerCells(i).removeAttribute("data-filter");
+	    i++;
 	}
-	for (i=0; i<filters.length; i++) {
-	    tbl.hCells[filters[i].cellIndex].setAttribute("data-filter", filters[i].filter);	            
+	for (i = 0; i<filters.length; i++) {
+	    tbl.headerCells(filters[i].cellIndex).setAttribute("data-filter", filters[i].filter);	            
 	}
 	//iterate through each row, put filter in then remove if necessary
 	var rows = tbl.tBodies[0].rows;
@@ -264,11 +377,11 @@ jTable.h = function(hDom) {
 	    colgroup = rHead.table.appendChild(document.createElement("colgroup"));
 	}
 	//create the cols if they don't already exist in the right number
-	if (colgroup.getElementsByTagName("col").length !== rHead.table.hCells.length) {
+	if (colgroup.getElementsByTagName("col").length !== rHead.parentNode.cells.length) {
 	    for (var i=0; i<colgroup.getElementsByTagName("col").length; i++) {
 	        colgroup.removeChild(colgroup.getElementsByTagName("col")[i]);
 	    }
-	    for (i=0; i<rHead.table.hCells.length; i++) {
+	    for (i=0; i<rHead.parentNode.cells.length; i++) {
 	        colgroup.appendChild(document.createElement("col"));
 	    }	
 	}
@@ -310,12 +423,12 @@ jTable.h = function(hDom) {
         //first, create array containing every value
         var values = [];
         var cellIndex = rHead.cellIndex;
-        //var cloneTable = jTable.t(rHead.table.cloneNode(true)).setSort([{cellIndex: cellIndex, dir: 'up'}]);
-        //var rows = cloneTable.tBodies[0].rows;
-        var colData = jTable.h(rHead.table.cloneNode(true)).setSort('up').data;
-        for (var i=0; i<colData.length; i++) {
-            if (i===0 || colData[i] !== colData[i-1]) {
-                values.push(colData[i]);    
+        var cloneTable = jTable.t(rHead.table.cloneNode(true)).setSort([{cellIndex: cellIndex, dir: 'up'}]);
+        var rows = cloneTable.tBodies[0].rows;
+        //var colData = jTable.h(rHead.table.cloneNode(true)).setSort('up').data;
+        for (var i=0; i<rows.length; i++) {
+            if (i===0 || cloneTable.data(i, cellIndex) !== cloneTable.data(i - 1, cellIndex)) {
+                values.push(cloneTable.data(i, cellIndex));    
             }
         }
         return values;
@@ -394,7 +507,7 @@ jTable.c = function(cDom) {
                 cell.removeAttribute("id");
             }
             //re-calculate the dataType. should only need to do this if incompatible.
-            var head = jTable.t(cell).hCells[cell.cellIndex];
+            var head = jTable.t(cell).headerCells(cell.cellIndex);
             head.setAttribute("data-datatype", head.calculateDataType());
         }
         return cell;
