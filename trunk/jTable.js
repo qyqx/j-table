@@ -1,10 +1,7 @@
 var jt = function (elem) {
     // resolve elem to a <table>, <th> or <td>, otherwise return undefined
-    if (elem === undefined) {
-        return undefined;
-    }
     elem = ((typeof elem) === "string") ? document.getElementById(elem) : elem;
-    if (elem === undefined) {
+    if (!elem) {
         return undefined;
     } 
     var i, j;
@@ -34,6 +31,9 @@ var jt = function (elem) {
     elem.data = function() {
         //returns the value in the relevant table cell
         var cell = elem.cell(arguments[0], arguments[1]);
+        if (!cell) {
+            return undefined;
+        }
         return cell.textContent ? cell.textContent : cell.innerText;
     }
     elem.headerCell = function() {
@@ -69,7 +69,29 @@ var jt = function (elem) {
         }
         return jt(parent);
     };
-    if (elem.tagName.toLowerCase() === 'td') {
+    elem.dataType = function() {
+        var answer;
+        if (elem.tagName.toLowerCase() === 'table') {
+            answer = [];
+            var i = 0;
+            while (elem.headerCell(i)) {
+                answer.push(elem.headerCell(i).dataType())
+                i++;
+            }
+            return answer;         
+        } else {
+            var headerCell = elem.headerCell();
+            if (headerCell.getAttribute("data-datatype")) {
+                return headerCell.getAttribute("data-datatype")
+            } else {
+                answer = headerCell.calculateDataType();
+                headerCell.setAttribute("data-datatype", answer);
+                return answer;
+            }
+        }
+    };  
+    
+    if (/^td|th$/.test(elem.tagName.toLowerCase())) {
         elem.setEditMode = function(ed) {
             var currentEd = elem.getEditMode();
             var div;
@@ -107,7 +129,7 @@ var jt = function (elem) {
                     elem.removeAttribute("id");
                 }
                 //re-calculate the dataType. should only need to do this if incompatible.
-                var head = jTable.t(elem).headerCells(elem.cellIndex);
+                var head = elem.headerCell();
                 head.setAttribute("data-datatype", head.calculateDataType());
             }
             return elem;
@@ -118,6 +140,67 @@ var jt = function (elem) {
                 return true;
             }
             return false;
+        };
+        elem.addColumn = function(dir) {
+            //left if dir===false, right if dir===true
+            if (typeof dir !== 'boolean') {
+                throw new TypeError("must pass boolean to jt().addColumn");
+            }
+            var th = document.createElement("th");
+            var td = document.createElement("td");
+            var headerCell = elem.headerCell();
+            var i = 0;
+            headerCell.parentNode.insertBefore(th, dir ? elem.nextSibling : elem);
+            while (headerCell.cell(i)) {
+                headerCell.cell(i).parentNode.insertBefore(td.cloneNode(true), dir ? headerCell.cell(i).nextSibling : headerCell.cell(i));
+                i++;
+            }
+            return elem;
+        };
+        elem.deleteColumn = function() {
+            var headerCell = elem.headerCell();
+            var i = 0;
+            while (headerCell.cell(i)) {
+                headerCell.cell(i).parentNode.removeChild(headerCell.cell(i));
+                i++;
+            }
+            return headerCell.parentNode.removeChild(headerCell);
+        };
+        elem.calculateDataType = function() {
+  	    //check data type of first entry. then check if all others consistent, if not then string.
+	    var headerCell = elem.headerCell();
+	    var i = 0;
+	    var dataType, dataType_old;
+	    calcCellDataType = function(data) {
+	        var answer = "string";
+	        for (var j in jTable.dataTypes) if (jTable.dataTypes.hasOwnProperty(j) && j !== 'string') {
+	            if ((!jTable.dataTypes[j].re || jTable.dataTypes[j].re.test(data)) &&
+                     (!jTable.dataTypes[j].js || jTable.dataTypes[j].js(data))) {
+	                answer = j;
+	                break;
+	            }
+	        }
+	        return answer;	    
+	    }
+	    if (elem.tagName.toLowerCase() === 'td') {
+	        return calcCellDataType(elem.data());
+	    }
+	    while (headerCell.cell(i)) {
+	        dataType = calcCellDataType(headerCell.data(i));
+	        if (i === 0) {
+	            dataType_old = dataType;
+	        }
+	        if (dataType === "string") {
+	            break;
+	        }
+	        if (dataType !== dataType_old) {
+	            dataType = "string";
+	            break;
+	        }
+	        dataType_old = dataType;
+	        i++;
+	    }	
+	    return dataType;
         };
         return elem;
     }
