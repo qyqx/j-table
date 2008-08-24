@@ -1,5 +1,8 @@
 var jt = function (elem) {
     // resolve elem to a <table>, <th> or <td>, otherwise return undefined
+    if (elem === undefined) {
+        return undefined;
+    }
     elem = ((typeof elem) === "string") ? document.getElementById(elem) : elem;
     if (elem === undefined) {
         return undefined;
@@ -19,10 +22,12 @@ var jt = function (elem) {
             return elem;
             break;
         case "th":
-            return jt(elem.table.tBodies[0].rows[arguments[0]].cells[elem.cellIndex]);
+            return elem.table().tBodies[0].rows[arguments[0]] && 
+              jt(elem.table().tBodies[0].rows[arguments[0]].cells[elem.cellIndex]);
             break;
         case "table":
-            return jt(elem.tBodies[0].rows[arguments[0]].cells[arguments[1]]);
+            return elem.tBodies[0].rows[arguments[0]] && 
+              jt(elem.tBodies[0].rows[arguments[0]].cells[arguments[1]]);
             break;
         }
     }
@@ -31,6 +36,39 @@ var jt = function (elem) {
         var cell = elem.cell(arguments[0], arguments[1]);
         return cell.textContent ? cell.textContent : cell.innerText;
     }
+    elem.headerCell = function() {
+        //returns the jt'd <th> element at the top of the relevant column
+        switch (elem.tagName.toLowerCase()) {
+        case "td":
+            return jt(elem.table().tHead.rows[0].cells[elem.cellIndex]);
+            break;
+        case "th":
+            return elem;
+            break;
+        case "table":
+            return jt(elem.tHead.rows[0].cells[arguments[0]]);
+            break;
+        }        
+    };    
+    elem.headerData = function() {
+        //returns the data in the <td> element at the top of the relevant column
+        var cell = elem.headerCell(arguments[0]);
+        if (!cell) {
+            return undefined;
+        }
+        return cell.textContent ? cell.textContent : cell.innerText;
+    };
+    elem.table = function() {
+        //returns elem's container <table> element
+        if (elem.tagName.toLowerCase() === 'table') {
+            return elem;
+        }
+        var parent = elem;
+        while (parent.tagName.toLowerCase() !== 'table') {
+            parent = parent.parentNode;
+        }
+        return jt(parent);
+    };
     if (elem.tagName.toLowerCase() === 'td') {
         elem.setEditMode = function(ed) {
             var currentEd = elem.getEditMode();
@@ -83,15 +121,6 @@ var jt = function (elem) {
         };
         return elem;
     }
-    if (elem.tagName.toLowerCase() === 'table') {
-        elem.headerCells = function(cellIndex) {
-            return jt(elem.tHead.rows[0].cells[cellIndex]);
-        };
-        elem.headerData = function(cellIndex) {
-            var cell = elem.headerCells(cellIndex);
-            return cell.textContent ? cell.textContent : cell.innerText;
-        };      
-    }
     return elem;
 };
 var jTable = {};
@@ -109,11 +138,11 @@ jTable.t = function(tDom) {
     }
     var i,j;
     //then, add utility methods to tbl
-    tbl.headerCells = function(i) {
+    tbl.headerCell = function(i) {
         return jTable.h(tbl.tHead.rows[0].cells[i]);
     };
     tbl.headData = function(col) {
-        var hCell = tbl.headerCells(col);
+        var hCell = tbl.headerCell(col);
         return hCell.textContent ? hCell.textContent : hCell.innerText;
     };
     tbl.data = function(row, col) {
@@ -125,7 +154,7 @@ jTable.t = function(tDom) {
         if (tbl.tHead.getAttribute("data-sortOrder")) {
             hSort = tbl.tHead.getAttribute("data-sortOrder").split(",");
             for (var i=0; i<hSort.length; i++) {
-                aSort.push({cellIndex: hSort[i], dir: tbl.headerCells(hSort[i]).getSort()});
+                aSort.push({cellIndex: hSort[i], dir: tbl.headerCell(hSort[i]).getSort()});
             }
         }
         return aSort;
@@ -147,13 +176,13 @@ jTable.t = function(tDom) {
 	var rows = tbl.tBodies[0].rows;
 	//update sort attributes
 	i = 0;
-	while (tbl.headerCells(i)) {
-	    tbl.headerCells(i).removeAttribute("data-sort");
+	while (tbl.headerCell(i)) {
+	    tbl.headerCell(i).removeAttribute("data-sort");
 	    i++;
 	}
 	var sortOrder = [];
 	for (i=0; i < aSort.length; i++)  {
-	    tbl.headerCells(aSort[i].cellIndex).setAttribute("data-sort", aSort[i].dir);
+	    tbl.headerCell(aSort[i].cellIndex).setAttribute("data-sort", aSort[i].dir);
 	    sortOrder.push(aSort[i].cellIndex);
 	}
 	tbl.tHead.setAttribute("data-sortOrder", sortOrder.join(","));
@@ -201,8 +230,8 @@ jTable.t = function(tDom) {
     tbl.dataType = function() {
         var answer = [];
         var i = 0;
-        while (tbl.headerCells(i)) {
-            answer.push(tbl.headerCells(i).dataType())
+        while (tbl.headerCell(i)) {
+            answer.push(tbl.headerCell(i).dataType())
             i++;
         }
         return answer;        
@@ -210,8 +239,8 @@ jTable.t = function(tDom) {
     tbl.getHide = function() {
         var answer = [];
         var i = 0;
-        while (tbl.headerCells(i)) {
-            if (tbl.headerCells(i).getHide()) {
+        while (tbl.headerCell(i)) {
+            if (tbl.headerCell(i).getHide()) {
                 answer.push(i);
             }
             i++;
@@ -233,10 +262,10 @@ jTable.t = function(tDom) {
             }
         }
         for (i=0; i<newHide.length; i++) {
-            tbl.headerCells(newHide[i]).setHide(true);
+            tbl.headerCell(newHide[i]).setHide(true);
         }
         for (i=0; i<removeHide.length; i++) {
-	    tbl.headerCells(removeHide[i]).setHide(false);
+	    tbl.headerCell(removeHide[i]).setHide(false);
         }
         return tbl;
     };
@@ -244,7 +273,7 @@ jTable.t = function(tDom) {
         var answer = [];
         var headerCell, headerCellFilter;
         for (var i = 0; true; i++) {
-            headerCell = tbl.headerCells(i);
+            headerCell = tbl.headerCell(i);
             if (!headerCell) {
                 break;
             }
@@ -257,12 +286,12 @@ jTable.t = function(tDom) {
     };
     tbl.setFilter = function(filters) {
 	var i = 0;
-	while (tbl.headerCells(i)) {
-	    tbl.headerCells(i).removeAttribute("data-filter");
+	while (tbl.headerCell(i)) {
+	    tbl.headerCell(i).removeAttribute("data-filter");
 	    i++;
 	}
 	for (i = 0; i<filters.length; i++) {
-	    tbl.headerCells(filters[i].cellIndex).setAttribute("data-filter", filters[i].filter);	            
+	    tbl.headerCell(filters[i].cellIndex).setAttribute("data-filter", filters[i].filter);	            
 	}
 	//iterate through each row, put filter in then remove if necessary
 	var rows = tbl.tBodies[0].rows;
@@ -507,7 +536,7 @@ jTable.c = function(cDom) {
                 cell.removeAttribute("id");
             }
             //re-calculate the dataType. should only need to do this if incompatible.
-            var head = jTable.t(cell).headerCells(cell.cellIndex);
+            var head = jTable.t(cell).headerCell(cell.cellIndex);
             head.setAttribute("data-datatype", head.calculateDataType());
         }
         return cell;

@@ -1,4 +1,36 @@
 var assert = YAHOO.util.Assert; 
+var tc_jt_cell = new YAHOO.tool.TestCase({
+    name: "jt_cell",
+    testCellTable: function() {
+        assert.areEqual(jt('testTable').cell(10,10) === undefined, true, "jt().cell() should pass undefined for cells out of bounds");
+        assert.areEqual(jt('testTable').cell(0,0).id, 'testCell1', "jt().cell(0,0) should return the first cell");
+        assert.areEqual(jt('testTable').cell(1,3).id, 'testCell2', "jt().cell(0,0) should return the relevant cell");
+    },
+    testCellHeader: function() {
+        assert.areEqual(jt('testColHeader').cell(10) === undefined, true, "jt().cell() should pass undefined for cells out of bounds");
+        assert.areEqual(jt('testColHeader').cell(0).id, 'testCell1', "jt().cell(0) should return the first cell");
+        assert.areEqual(jt('testColHeader').cell(1).id, 'testCell3', "jt().cell(1) should return the relevant cell");
+    },
+    testCellCell: function() {
+        assert.areEqual(jt('testCell1').cell().id, 'testCell1', "jt().cell() should return itself for cells");
+    }      
+});
+var tc_jt_data = new YAHOO.tool.TestCase({
+    name: "jt_data",
+    testDataTable: function() {
+        assert.areEqual(jt('testTable').data(10,10) === undefined, true, "jt().data() should pass undefined for cells out of bounds");
+        assert.areEqual(jt('testTable').data(0,0), 50, "jt().cell(0,0) should return the first cell contents");
+        assert.areEqual(jt('testTable').data(1,3), 100, "jt().cell(0,0) should return the relevant cell");
+    },
+    testDataHeader: function() {
+        assert.areEqual(jt('testColHeader').data(10) === undefined, true, "jt() should pass undefined for cells out of bounds");
+        assert.areEqual(jt('testColHeader').data(0), 50, "jt().data(0) should return the first cell data");
+        assert.areEqual(jt('testColHeader').data(1), 60, "jt().data(1) should return the relevant cell data");
+    },
+    testDataCell: function() {
+        assert.areEqual(jt('testCell1').data(), 100, "jt().data() should return its contents");
+    }      
+});
 var tc_jTable_t = new YAHOO.tool.TestCase({
 	name: "jTable.t",
 	setUp : function () {
@@ -217,6 +249,8 @@ var tc_jTable_h_addremovecolumn = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.h('testColHeader').parentNode.cells.length, 5, "jTable.h.addColumn didn't decrement the header count");
 	}
 });
+YAHOO.tool.TestRunner.add(tc_jt_cell);
+YAHOO.tool.TestRunner.add(tc_jt_data);
 YAHOO.tool.TestRunner.add(tc_jTable_t);
 YAHOO.tool.TestRunner.add(tc_jTable_h);
 YAHOO.tool.TestRunner.add(tc_jTable_t_sort);
