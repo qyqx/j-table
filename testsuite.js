@@ -3,7 +3,7 @@ var tc_jt_cell = new YAHOO.tool.TestCase({
     name: "jt_cell",
     testCellTable: function() {
         assert.areEqual(jt('testTable').cell(10,10) === undefined, true, "jt().cell() should pass undefined for cells out of bounds");
-        assert.areEqual(jt('testTable').cell(0,0).id, 'testCell1', "jt().cell(0,0) should return the first cell");
+        assert.areEqual(jt('testTable').cell(0,1).id, 'testCell1', "jt().cell(0,0) should return the first cell");
         assert.areEqual(jt('testTable').cell(1,3).id, 'testCell2', "jt().cell(0,0) should return the relevant cell");
     },
     testCellHeader: function() {
@@ -19,17 +19,63 @@ var tc_jt_data = new YAHOO.tool.TestCase({
     name: "jt_data",
     testDataTable: function() {
         assert.areEqual(jt('testTable').data(10,10) === undefined, true, "jt().data() should pass undefined for cells out of bounds");
-        assert.areEqual(jt('testTable').data(0,0), 50, "jt().cell(0,0) should return the first cell contents");
-        assert.areEqual(jt('testTable').data(1,3), 100, "jt().cell(0,0) should return the relevant cell");
+        assert.areEqual(jt('testTable').data(0,0), 'USA', "jt().cell(0,0) should return the first cell contents");
+        assert.areEqual(jt('testTable').data(1,3), 120, "jt().cell(0,0) should return the relevant cell");
     },
     testDataHeader: function() {
         assert.areEqual(jt('testColHeader').data(10) === undefined, true, "jt() should pass undefined for cells out of bounds");
-        assert.areEqual(jt('testColHeader').data(0), 50, "jt().data(0) should return the first cell data");
-        assert.areEqual(jt('testColHeader').data(1), 60, "jt().data(1) should return the relevant cell data");
+        assert.areEqual(jt('testColHeader').data(0), 100, "jt().data(0) should return the first cell data");
+        assert.areEqual(jt('testColHeader').data(1), 50, "jt().data(1) should return the relevant cell data");
     },
     testDataCell: function() {
         assert.areEqual(jt('testCell1').data(), 100, "jt().data() should return its contents");
     }      
+});
+var tc_jt_headercell = new YAHOO.tool.TestCase({
+    name: "jt_headercell",
+    testHeaderCellTable: function() {
+        assert.areEqual(jt('testTable').headerCell(1).id, 'testColHeader', "jt().headerCell() didn't return the correct header cell");
+        assert.areEqual(jt('testTable').headerCell(100) === undefined, true, "jt().headerCell() should return undefined if it doesn't find the cell");
+    },
+    testHeaderCellHeader: function() {
+        assert.areEqual(jt('testColHeader').headerCell().id, 'testColHeader', "jt().headerCell should return itself");
+    },
+    testHeaderCellCell: function() {
+        assert.areEqual(jt('testCell1').headerCell().id, 'testColHeader', "jt().headerCell() should return the header cell of a cell");
+    }      
+});
+var tc_jt_headerdata = new YAHOO.tool.TestCase({
+    name: "jt_headerdata",
+    testHeaderDataTable: function() {
+        assert.areEqual(jt('testTable').headerData(1), 'Q1', "jt().headerData() didn't return the correct header cell");
+        assert.areEqual(jt('testTable').headerData(100) === undefined, true, "jt().headerData() should return undefined if it doesn't find the cell");
+    },
+    testHeaderDataHeader: function() {
+        assert.areEqual(jt('testColHeader').headerData(), 'Q1', "jt().headerData should return its contents");
+    },
+    testHeaderDataCell: function() {
+        assert.areEqual(jt('testCell1').headerData(), 'Q1', "jt().headerData() should return the contents of the relevant header cell");
+    }      
+});
+var tc_jt_table = new YAHOO.tool.TestCase({
+    name: "jt_table",
+    testTableTable: function() {
+        assert.areEqual(jt('testTable').table().id, 'testTable', "jt().table() should return itself");
+    },
+    testTableHeader: function() {
+        assert.areEqual(jt('testColHeader').table().id, 'testTable', "jt().table() should return the parent table");
+    },
+    testTableCell: function() {
+        assert.areEqual(jt('testCell1').table().id, 'testTable', "jt().table() should return the parent table");
+    }
+});
+var tc_jt_datatype = new YAHOO.tool.TestCase({
+	name: "jt.datatype",
+	testGetTDataType: function() {
+	    assert.areEqual(jt('testTable').dataType().join(), 'string,number,number,number,number', "incorrect table data types");
+	    assert.areEqual(jt('testColHeader').dataType(), 'number', 'incorrect column data types');
+	    assert.areEqual(jt('testCell1').dataType(), 'number', 'incorrect column data type');
+	}
 });
 var tc_jTable_t = new YAHOO.tool.TestCase({
 	name: "jTable.t",
@@ -218,21 +264,21 @@ var tc_jTable_c = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.c('menu'), undefined, "jTable should not allow non-table parameter");
 	}
 });
-var tc_jTable_c_editmode = new YAHOO.tool.TestCase({
-	name: "jTable.c.editMode",
+var tc_jt_editmode = new YAHOO.tool.TestCase({
+	name: "jt.editMode",
 	setUp : function () {
-	    this.data = jTable.c('testColHeader');
+	    this.data = jt('testColHeader');
 	},
 	tearDown : function () {
 	    delete this.data;
 	},
 	testGetEditMode: function () {
-	    assert.areEqual(this.data.getEditMode(), false, "jTable.c('testColHeader').getEditMode() should return false");
+	    assert.areEqual(this.data.getEditMode(), false, "jt('testColHeader').getEditMode() should return false");
 	},
 	testSetEditMode: function() {
 	    this.data.setEditMode(true);
-	    assert.areEqual(this.data.getElementsByTagName("div").length, 1, "jTable.c().setEditMode() did not make a cell editable");
-	    assert.areEqual(this.data.getEditMode(), true, "jTable.c.setEditMode did not update jTable.c.getEditMode");
+	    assert.areEqual(this.data.getElementsByTagName("div").length, 1, "jt.setEditMode() did not make a cell editable");
+	    assert.areEqual(this.data.getEditMode(), true, "jt.setEditMode did not update jt.getEditMode");
 	    this.data.setEditMode(false);
 	}
 });
@@ -249,8 +295,25 @@ var tc_jTable_h_addremovecolumn = new YAHOO.tool.TestCase({
 	    assert.areEqual(jTable.h('testColHeader').parentNode.cells.length, 5, "jTable.h.addColumn didn't decrement the header count");
 	}
 });
+var tc_jt_addremovecolumn = new YAHOO.tool.TestCase({
+	name: "jt.addRemoveColumn",
+	testAddColumn: function () {
+	    jt('testColHeader').addColumn(false);
+	    jt('testColHeader').addColumn(true);
+	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 7, "jt.addColumn didn't increment the header count");
+	},
+	testRemoveColumn: function() {
+	    jt(jt('testColHeader').nextSibling).deleteColumn();
+	    jt(jt('testColHeader').previousSibling).deleteColumn();
+	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 5, "jt.addColumn didn't decrement the header count");
+	}
+});
 YAHOO.tool.TestRunner.add(tc_jt_cell);
 YAHOO.tool.TestRunner.add(tc_jt_data);
+YAHOO.tool.TestRunner.add(tc_jt_headercell);
+YAHOO.tool.TestRunner.add(tc_jt_headerdata);
+YAHOO.tool.TestRunner.add(tc_jt_table);
+YAHOO.tool.TestRunner.add(tc_jt_datatype);
 YAHOO.tool.TestRunner.add(tc_jTable_t);
 YAHOO.tool.TestRunner.add(tc_jTable_h);
 YAHOO.tool.TestRunner.add(tc_jTable_t_sort);
@@ -261,7 +324,8 @@ YAHOO.tool.TestRunner.add(tc_jTable_t_hide);
 YAHOO.tool.TestRunner.add(tc_jTable_h_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_t_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_c);
-YAHOO.tool.TestRunner.add(tc_jTable_c_editmode);
+YAHOO.tool.TestRunner.add(tc_jt_editmode);
 YAHOO.tool.TestRunner.add(tc_jTable_h_addremovecolumn);
+YAHOO.tool.TestRunner.add(tc_jt_addremovecolumn);
 var oLogger = new YAHOO.tool.TestLogger(); 
 YAHOO.tool.TestRunner.run();
