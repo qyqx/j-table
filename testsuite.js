@@ -72,7 +72,7 @@ var tc_jt_table = new YAHOO.tool.TestCase({
 var tc_jt_datatype = new YAHOO.tool.TestCase({
 	name: "jt.datatype",
 	testGetTDataType: function() {
-	    assert.areEqual(jt('testTable').dataType().join(), 'string,number,number,number,number', "incorrect table data types");
+	    assert.areEqual(jt('testTable').dataType(0), 'string', "incorrect table data types");
 	    assert.areEqual(jt('testColHeader').dataType(), 'number', 'incorrect column data types');
 	    assert.areEqual(jt('testCell1').dataType(), 'number', 'incorrect column data type');
 	}
@@ -297,14 +297,28 @@ var tc_jTable_h_addremovecolumn = new YAHOO.tool.TestCase({
 });
 var tc_jt_addremovecolumn = new YAHOO.tool.TestCase({
 	name: "jt.addRemoveColumn",
-	testAddColumn: function () {
+	testTableAddRemove: function () {
+	    jt('testTable').addColumn(false, 1);
+	    jt('testTable').addColumn(true, 2);
+	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 7, "jt.addColumn didn't increment the header count");
+	    jt('testTable').deleteColumn(1);
+	    jt('testTable').deleteColumn(2);
+	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 5, "jt.addColumn didn't decrement the header count");
+	},
+	testHeaderAddRemove: function () {
 	    jt('testColHeader').addColumn(false);
 	    jt('testColHeader').addColumn(true);
 	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 7, "jt.addColumn didn't increment the header count");
-	},
-	testRemoveColumn: function() {
 	    jt(jt('testColHeader').nextSibling).deleteColumn();
 	    jt(jt('testColHeader').previousSibling).deleteColumn();
+	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 5, "jt.addColumn didn't decrement the header count");
+	},
+	testCellAddRemove: function () {
+	    jt('testCell1').addColumn(false);
+	    jt('testCell1').addColumn(true);
+	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 7, "jt.addColumn didn't increment the header count");
+	    jt(jt('testCell1').previousSibling).deleteColumn();
+	    jt(jt('testCell1').nextSibling).deleteColumn();
 	    assert.areEqual(jt('testColHeader').parentNode.cells.length, 5, "jt.addColumn didn't decrement the header count");
 	}
 });
@@ -325,7 +339,7 @@ YAHOO.tool.TestRunner.add(tc_jTable_h_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_t_filter);
 YAHOO.tool.TestRunner.add(tc_jTable_c);
 YAHOO.tool.TestRunner.add(tc_jt_editmode);
-YAHOO.tool.TestRunner.add(tc_jTable_h_addremovecolumn);
+//YAHOO.tool.TestRunner.add(tc_jTable_h_addremovecolumn);
 YAHOO.tool.TestRunner.add(tc_jt_addremovecolumn);
 var oLogger = new YAHOO.tool.TestLogger(); 
 YAHOO.tool.TestRunner.run();
