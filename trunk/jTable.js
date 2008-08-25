@@ -70,29 +70,50 @@ var jt = function (elem) {
         return jt(parent);
     };
     elem.dataType = function() {
-        var answer;
-        if (elem.tagName.toLowerCase() === 'table') {
-            answer = [];
-            var i = 0;
-            while (elem.headerCell(i)) {
-                answer.push(elem.headerCell(i).dataType())
-                i++;
-            }
-            return answer;         
+        //returns the elem's headerCell dataType. table.dataType requires cellIndex parameter
+        var headerCell = elem.headerCell(arguments[0]);
+        if (headerCell.getAttribute("data-datatype")) {
+            return headerCell.getAttribute("data-datatype");
         } else {
-            var headerCell = elem.headerCell();
-            if (headerCell.getAttribute("data-datatype")) {
-                return headerCell.getAttribute("data-datatype")
-            } else {
-                answer = headerCell.calculateDataType();
-                headerCell.setAttribute("data-datatype", answer);
-                return answer;
-            }
+            answer = headerCell.calculateDataType();
+            headerCell.setAttribute("data-datatype", answer);
+            return answer;
         }
     };  
-    
+    elem.addColumn = function(dir) {
+        //adds col to the left if dir===false, right if dir===true. table.addColumn has extra cellIndex argument
+        if (typeof dir !== 'boolean') {
+            throw new TypeError("must pass boolean to jt().addColumn");
+        }
+        var th = document.createElement("th");
+        var td = document.createElement("td");
+        var headerCell = elem.headerCell(arguments[1]);
+        var dataCell;
+        var i = 0;
+        while (true) {
+            dataCell = headerCell.cell(i);
+            if (!dataCell) {
+                break;
+            }
+            dataCell.parentNode.insertBefore(td.cloneNode(false), dir ? dataCell.nextSibling : dataCell);
+            i++;
+        }
+        headerCell.parentNode.insertBefore(th, dir ? headerCell.nextSibling : headerCell);
+        return elem;
+    };
+    elem.deleteColumn = function() {
+        //deletes the relevant column. table.deleteColumn has cellIndex argument
+        var headerCell = elem.headerCell(arguments[0]);
+        var i = 0;
+        while (headerCell.cell(i)) {
+            headerCell.cell(i).parentNode.removeChild(headerCell.cell(i));
+            i++;
+        }
+        return headerCell.parentNode.removeChild(headerCell);
+    };
     if (/^td|th$/.test(elem.tagName.toLowerCase())) {
         elem.setEditMode = function(ed) {
+            //sets the cell to contenteditable or not
             var currentEd = elem.getEditMode();
             var div;
             if (ed && !currentEd) {
@@ -135,36 +156,12 @@ var jt = function (elem) {
             return elem;
         };
         elem.getEditMode = function() {
+            //returns boolean depending on contenteditable state
             var divs = elem.getElementsByTagName("div");
             for (var i=0; i < divs.length; i++) if (divs[i].contentEditable) {
                 return true;
             }
             return false;
-        };
-        elem.addColumn = function(dir) {
-            //left if dir===false, right if dir===true
-            if (typeof dir !== 'boolean') {
-                throw new TypeError("must pass boolean to jt().addColumn");
-            }
-            var th = document.createElement("th");
-            var td = document.createElement("td");
-            var headerCell = elem.headerCell();
-            var i = 0;
-            headerCell.parentNode.insertBefore(th, dir ? elem.nextSibling : elem);
-            while (headerCell.cell(i)) {
-                headerCell.cell(i).parentNode.insertBefore(td.cloneNode(true), dir ? headerCell.cell(i).nextSibling : headerCell.cell(i));
-                i++;
-            }
-            return elem;
-        };
-        elem.deleteColumn = function() {
-            var headerCell = elem.headerCell();
-            var i = 0;
-            while (headerCell.cell(i)) {
-                headerCell.cell(i).parentNode.removeChild(headerCell.cell(i));
-                i++;
-            }
-            return headerCell.parentNode.removeChild(headerCell);
         };
         elem.calculateDataType = function() {
   	    //check data type of first entry. then check if all others consistent, if not then string.
@@ -202,7 +199,52 @@ var jt = function (elem) {
 	    }	
 	    return dataType;
         };
-        return elem;
+    }
+    if (/^th|table$/.test(elem.tagName.toLowerCase())) {
+        elem.getHide = function() {
+            //returns the hidden state (true or false). table.getHide requires cellIndex parameter.
+            var answer = false;
+            var col = elem.table().getElementsByTagName("col")[elem.cellIndex || arguments[0]];
+            if (col && (col.style.visibility === 'collapse' || col.style.display === 'none')) {
+                answer = true;
+            }
+            return answer;        
+        };
+        elem.setHide = function(hide) {
+            //sets the hidden state (true or false). table.setHide requires extra cellIndex parameter.
+    	    var currentHide = elem.getHide();
+	    var cellIndex = rHead.cellIndex;
+	    var colgroup = rHead.table.getElementsByTagName("colgroup")[0];
+	    //create the colgroup if it doesn't already exist
+	    if (!colgroup) {
+	        colgroup = rHead.table.appendChild(document.createElement("colgroup"));
+	    }
+	    //create the cols if they don't already exist in the right number
+	    if (colgroup.getElementsByTagName("col").length !== rHead.parentNode.cells.length) {
+	        for (var i=0; i<colgroup.getElementsByTagName("col").length; i++) {
+	            colgroup.removeChild(colgroup.getElementsByTagName("col")[i]);
+	        }
+	        for (i=0; i<rHead.parentNode.cells.length; i++) {
+	            colgroup.appendChild(document.createElement("col"));
+	        }	
+	    }
+	    var col = colgroup.getElementsByTagName("col")[cellIndex];
+	    if (hide && !currentHide) {
+	        try { //Fx, Safari
+	            col.style.visibility = 'collapse';
+	        } catch(err) {
+	            col.style.display = 'none';
+	        }
+	    }
+	    if (!hide && currentHide) {
+	        if (col.style.display === 'none') {
+	            col.style.display = '';
+	        } else {
+	            col.style.visibility = '';
+	        }
+	    }
+	    return rHead;
+        };
     }
     return elem;
 };
