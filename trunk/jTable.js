@@ -212,29 +212,28 @@ var jt = function (elem) {
         };
         elem.setHide = function(hide) {
             //sets the hidden state (true or false). table.setHide requires extra cellIndex parameter.
-    	    var currentHide = elem.getHide();
-	    var cellIndex = rHead.cellIndex;
-	    var colgroup = rHead.table.getElementsByTagName("colgroup")[0];
+    	    var currentHide = elem.getHide(arguments[1]);
+	    var colgroup = elem.table().getElementsByTagName("colgroup")[0];
 	    //create the colgroup if it doesn't already exist
 	    if (!colgroup) {
-	        colgroup = rHead.table.appendChild(document.createElement("colgroup"));
+	        colgroup = elem.table().appendChild(document.createElement("colgroup"));
 	    }
 	    //create the cols if they don't already exist in the right number
-	    if (colgroup.getElementsByTagName("col").length !== rHead.parentNode.cells.length) {
+	    if (colgroup.getElementsByTagName("col").length !== elem.table().tHead.rows[0].cells.length) {
 	        for (var i=0; i<colgroup.getElementsByTagName("col").length; i++) {
 	            colgroup.removeChild(colgroup.getElementsByTagName("col")[i]);
 	        }
-	        for (i=0; i<rHead.parentNode.cells.length; i++) {
+	        for (i=0; i < elem.table().tHead.rows[0].cells.length; i++) {
 	            colgroup.appendChild(document.createElement("col"));
 	        }	
 	    }
-	    var col = colgroup.getElementsByTagName("col")[cellIndex];
-	    if (hide && !currentHide) {
-	        try { //Fx, Safari
+	    var col = colgroup.getElementsByTagName("col")[arguments[1] || elem.cellIndex];
+	    try { //Fx, Safari
+	        if (hide && !currentHide) {
 	            col.style.visibility = 'collapse';
-	        } catch(err) {
-	            col.style.display = 'none';
-	        }
+	        } 
+	    } catch(err) {
+	        col.style.display = 'none';
 	    }
 	    if (!hide && currentHide) {
 	        if (col.style.display === 'none') {
@@ -243,7 +242,59 @@ var jt = function (elem) {
 	            col.style.visibility = '';
 	        }
 	    }
-	    return rHead;
+	    return elem;
+        };
+        elem.getFilter = function() {
+            //returns the filter regexp for the relevant header. table.getFilter requires cellIndex parameter
+            var isRegExp = /^\/(.+)\/$/.exec(elem.headerCell(arguments[0]).getAttribute("data-filter"));
+            if (isRegExp) {
+                return new RegExp(isRegExp[1]);
+            }
+        };
+        elem.setFilter = function(f) {
+            //sets the filter regexp for the relevant header, pass undefined to remove it
+            //table.setFilter requires extra cellIndex parameter
+            var header = elem.headerCell(arguments[1]);
+            if (f) {
+                header.setAttribute("data-filter", f);
+            }
+            else {
+                header.removeAttribute("data-filter");
+            }
+	    //build the filters array, [{cellIndex: n, filter: /filterme/},...]
+	    var col = 0;
+	    var filters = [];
+	    var headerCell;
+	    while (true) {
+	        headerCell = elem.table().headerCell(col);
+	        if (!headerCell) {
+	            break;
+	        }
+	        if (headerCell.getAttribute("data-filter")) {
+	            filters.push({cellIndex: col, filter: headerCell.getFilter()});
+	        }
+	        col++;
+	    }
+	    //iterate through each row, put filter in then remove if necessary
+	    var rows = elem.table().tBodies[0].rows;
+	    var rowpass;
+	    for (var irow=0; irow < rows.length; irow++) {
+	        rowpass = true;
+	        for (var j=0; j < filters.length; j++) {
+	        //if any of the filters doesn't match, then mark the row as filtered
+	            if (!filters[j].filter.test(elem.table().data(irow, filters[j].cellIndex))) {
+	                rowpass = false;
+	                break;
+	            }
+	        }
+	        if (rowpass) {
+	            rows[irow].className = rows[irow].className.replace(/filtered/g, "");
+	        }
+	        else if (rows[irow].className.search(" filtered") === -1) {
+	            rows[irow].className += " filtered";
+	        }
+   	    }
+            return elem;
         };
     }
     return elem;
