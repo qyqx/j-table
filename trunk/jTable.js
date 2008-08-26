@@ -12,6 +12,34 @@ var jt = function (elem) {
         return undefined;
     }
     //shared functions
+    var dataTypes = {
+        number: {
+            re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
+            swap: function(a,b) {
+                return Number(a) > Number(b);
+            }
+        },
+        currency: {
+            re: /^-?\d+(?:\.\d*)?$/i,
+            swap: function(a,b) {
+                return Number(a) > Number(b);
+            }
+        },
+        date: {
+            js: function(x) {
+                var scratch = new Date(x); 
+                return scratch.toString() !== 'NaN' && scratch.toString() !== 'Invalid Date';
+            },
+            swap: function(a,b) {
+                return Date.parse(a) > Date.parse(b);
+            }
+        },
+        string: {
+            swap: function(a,b) {
+                return a > b;
+            }
+        }
+    };    
     elem.cell = function() {
         //returns the jt'd <td> element
         switch (elem.tagName.toLowerCase()) {
@@ -27,7 +55,7 @@ var jt = function (elem) {
               jt(elem.tBodies[0].rows[arguments[0]].cells[arguments[1]]);
             break;
         }
-    }
+    };
     elem.data = function() {
         //returns the value in the relevant table cell
         var cell = elem.cell(arguments[0], arguments[1]);
@@ -35,7 +63,7 @@ var jt = function (elem) {
             return undefined;
         }
         return cell.textContent ? cell.textContent : cell.innerText;
-    }
+    };
     elem.headerCell = function() {
         //returns the jt'd <th> element at the top of the relevant column
         switch (elem.tagName.toLowerCase()) {
@@ -170,9 +198,8 @@ var jt = function (elem) {
 	    var dataType, dataType_old;
 	    calcCellDataType = function(data) {
 	        var answer = "string";
-	        for (var j in jTable.dataTypes) if (jTable.dataTypes.hasOwnProperty(j) && j !== 'string') {
-	            if ((!jTable.dataTypes[j].re || jTable.dataTypes[j].re.test(data)) &&
-                     (!jTable.dataTypes[j].js || jTable.dataTypes[j].js(data))) {
+	        for (var j in dataTypes) if (dataTypes.hasOwnProperty(j) && j !== 'string') {
+	            if ((!dataTypes[j].re || dataTypes[j].re.test(data)) && (!dataTypes[j].js || dataTypes[j].js(data))) {
 	                answer = j;
 	                break;
 	            }
@@ -296,9 +323,97 @@ var jt = function (elem) {
    	    }
             return elem;
         };
+        elem.getSort = function () {
+            //for columns returns "up", "down" or undefined
+            //for tables returns array [{cellIndex:n, dir: 'up'}, ...]
+            var aSort = [], hSort;
+            if (elem.tagName.toLowerCase() === 'th') {
+                return elem.getAttribute("data-sort");
+            } else {
+                if (elem.table().getAttribute("data-sortOrder")) {
+                    hSort = elem.table().getAttribute("data-sortOrder").split(",");
+                    for (var i=0; i<hSort.length; i++) {
+                        aSort.push({cellIndex: hSort[i], dir: elem.headerCell(hSort[i]).getSort()});
+                    }
+                }
+                return aSort;
+            }
+        };
+        elem.setSort = function(aSort) {
+            var i;
+            var tbl = elem.table();
+            if (elem.tagName.toLowerCase() === 'th') {
+                aSort = [{cellIndex: elem.cellIndex, dir: aSort}];
+            }
+            if (typeof aSort !== "object" || aSort.constructor !== Array) {
+                throw new TypeError ("jt.setSort() expects an array parameter");
+            }
+            for (i=0; i<aSort.length; i++) {
+                if (aSort[i].cellIndex === undefined || aSort[i].dir === undefined) {
+                    throw new TypeError ("jt.setSort() expects cellIndex and dir for array item " + i);
+                }
+            }
+    	    //this is a comb sort. O(n log n), but O(n) if already sorted
+	    //for now, just sort using first item in sort array
+	    var currentSort = tbl.getSort();
+	    var rows = tbl.tBodies[0].rows;
+	    //update sort attributes
+	    i = 0;
+	    while (tbl.headerCell(i)) {
+	        tbl.headerCell(i).removeAttribute("data-sort");
+	        i++;
+	    }
+	    var sortOrder = [];
+	    for (i=0; i < aSort.length; i++)  {
+	        tbl.headerCell(aSort[i].cellIndex).setAttribute("data-sort", aSort[i].dir);
+	        sortOrder.push(aSort[i].cellIndex);
+	    }
+	    tbl.setAttribute("data-sortOrder", sortOrder.join(","));
+	    if (aSort.length === 0) {
+	        return tbl;
+	    }
+	    //if it's already sorted the opposite way, just reflect it
+	    if (currentSort.length === 1 && aSort.length === 1 && currentSort[0].cellIndex === aSort[0].cellIndex &&
+	      currentSort[0].dir !== aSort[0].dir) {
+	        for (i=rows.length - 1; i>=0; i--) {
+	            rows[0].parentNode.appendChild(rows[0].parentNode.removeChild(rows[i]));
+	        }	  
+	    } else {
+	    //use comb sort O(n log n)
+	        var gap = rows.length;
+	        var swapped = true;
+	        var swapResult;
+	        var a, b;
+	        while (gap > 1 || swapped) {
+	       //update the gap value for a next comb
+	            if (gap > 1) {
+	                gap = Math.floor (gap / 1.3);
+	                if (gap === 10 || gap === 9) {
+	                    gap = 11;
+	                }
+	            }
+	            swapped = false;
+	            //a single "comb" over the input list
+	            for (i=0; i + gap < rows.length; i++) for (var j=0; j<aSort.length; j++) {
+	                a = tbl.data(i, aSort[j].cellIndex);
+	                b = tbl.data(i + gap, aSort[j].cellIndex);
+	                if (a !== b) {
+	                    if (dataTypes[tbl.dataType(aSort[j].cellIndex)].swap(a,b) ? aSort[j].dir === 'up' : aSort[j].dir === 'down') {
+	                        var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
+	   	                rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
+		     	        swapped = true;
+	                    } 
+	                    break;
+	                }
+	            }
+	        }
+	    }
+	    return tbl;
+        };
     }
     return elem;
 };
+/*
 var jTable = {};
 jTable.t = function(tDom) {
     //first, create a table object, raising a TypeError if appropriate
@@ -754,3 +869,4 @@ jTable.dataTypes = {
         }
     }
 };
+*/
