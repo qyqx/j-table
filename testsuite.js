@@ -113,14 +113,14 @@ var tc_jt_filter = new YAHOO.tool.TestCase({
         jt('testTable').setFilter(undefined, 1);
     }
 });
-var tc_jTable_t_sort = new YAHOO.tool.TestCase({
-	name: "jTable.t.sort",
+var tc_jt_tablesort = new YAHOO.tool.TestCase({
+	name: "jt.tablesort",
 	setUp : function () {
-	    this.data = jTable.t('testTable').getSort();
+	    this.data = jt('testTable').getSort();
 	},
 	tearDown : function () {
 	    delete this.data;
-	    jTable.t('testTable').setSort([]);
+	    jt('testTable').setSort([]);
 	},
 	_should: {
 	    error: {
@@ -130,48 +130,48 @@ var tc_jTable_t_sort = new YAHOO.tool.TestCase({
 	    }	
 	},
 	testGetSort: function () {
-	    assert.isArray(this.data, "jTable.t().getSort() should return an array");
+	    assert.isArray(this.data, "table.getSort() should return an array");
 	    for (var i=0; i<this.data.length; i++) {
 	        assert.isNumber(this.data[i].cellIndex, "cellIndex should be a number");
 	        assert.isString(this.data[i].dir, "dir should be a string");
 	    }
 	},
 	testSetSortNoArray: function() {
-	    jTable.t('testTable').setSort('hello');	
+	    jt('testTable').setSort('hello');	
 	},
 	testSetSortNoCellIndex: function() {
-	    jTable.t('testTable').setSort([{dir: 'up'}]);
+	    jt('testTable').setSort([{dir: 'up'}]);
 	},
 	testSetSortNoDir: function() {
-	    jTable.t('testTable').setSort([{cellIndex: 2, typo: 'up'}]);
+	    jt('testTable').setSort([{cellIndex: 2, typo: 'up'}]);
 	},
 	testSetSingleSort: function() {
-	    var tbl = jTable.t('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
+	    var tbl = jt('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
 	    assert.areEqual(tbl.getSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
 	    assert.areEqual(tbl.getSort()[0].dir, 'up', "setSort did not respect dir");
 	    assert.areEqual(tbl.data(0, 0), 'UK', 'setSort did not sort correctly');
 	    assert.areEqual(tbl.data(1, 0), 'France', 'setSort did not sort correctly');
 	},
 	testSetMultipleSort: function() {
-	    var tbl = jTable.t('testTable').setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
+	    var tbl = jt('testTable').setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
 	    assert.areEqual(tbl.getSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
 	    assert.areEqual(tbl.getSort()[1].dir, 'up', "setSort did not respect the second dir");
 	    assert.areEqual(tbl.data(0, 0), 'France', 'setSort did not multi-sort correctly');
 	    assert.areEqual(tbl.data(1, 0), 'USA', 'setSort did not multi-sort correctly');    
 	}
 });
-var tc_jTable_h_sort = new YAHOO.tool.TestCase({
-	name: "jTable.h.sort",
+var tc_jt_headersort = new YAHOO.tool.TestCase({
+	name: "jt.headersort",
 	setUp : function () {
-	    this.data = jTable.h('testColHeader');
+	    this.data = jt('testColHeader');
 	},
 	tearDown : function () {
 	    delete this.data;
 	    delete this.sort;
-	    jTable.h('testColHeader').setSort();
+	    jt('testColHeader').setSort();
 	},
 	testSort: function() {
-	    jTable.h('testColHeader').setSort('up');
+	    jt('testColHeader').setSort('up');
 	    assert.areEqual(this.data.getSort(), 'up', "getSort did not reflect setSort");
 	    assert.areEqual(this.data.data(0), '50', 'setSort did not sort correctly');
 	    assert.areEqual(this.data.data(1), '60', 'setSort did not sort correctly');
@@ -230,8 +230,8 @@ YAHOO.tool.TestRunner.add(tc_jt_table);
 YAHOO.tool.TestRunner.add(tc_jt_datatype);
 YAHOO.tool.TestRunner.add(tc_jt_hide);
 YAHOO.tool.TestRunner.add(tc_jt_filter);
-YAHOO.tool.TestRunner.add(tc_jTable_t_sort);
-YAHOO.tool.TestRunner.add(tc_jTable_h_sort);
+YAHOO.tool.TestRunner.add(tc_jt_tablesort);
+YAHOO.tool.TestRunner.add(tc_jt_headersort);
 YAHOO.tool.TestRunner.add(tc_jt_editmode);
 YAHOO.tool.TestRunner.add(tc_jt_addremovecolumn);
 var oLogger = new YAHOO.tool.TestLogger(); 
