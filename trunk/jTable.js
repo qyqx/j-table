@@ -228,6 +228,19 @@ var jt = function (elem) {
         };
     }
     if (/^th|table$/.test(elem.tagName.toLowerCase())) {
+        elem.getUniqueValues = function() {
+            //return an array of all unique column values, sorted ascending.
+            var values = [];
+            var cellIndex = arguments[0] || elem.cellIndex;
+            var cloneTable = jt(elem.table().cloneNode(true)).setSort([{cellIndex: cellIndex, dir: 'up'}]);
+            var rows = cloneTable.tBodies[0].rows;
+            for (var i=0; i<rows.length; i++) {
+                if (i===0 || cloneTable.data(i, cellIndex) !== cloneTable.data(i - 1, cellIndex)) {
+                    values.push(cloneTable.data(i, cellIndex));    
+                }
+            }
+            return values;
+        };    
         elem.getHide = function() {
             //returns the hidden state (true or false). table.getHide requires cellIndex parameter.
             var answer = false;
@@ -343,7 +356,11 @@ var jt = function (elem) {
             var i;
             var tbl = elem.table();
             if (elem.tagName.toLowerCase() === 'th') {
-                aSort = [{cellIndex: elem.cellIndex, dir: aSort}];
+                if (aSort) {
+                    aSort = [{cellIndex: elem.cellIndex, dir: aSort}];
+                } else {
+                    aSort = [];
+                }
             }
             if (typeof aSort !== "object" || aSort.constructor !== Array) {
                 throw new TypeError ("jt.setSort() expects an array parameter");
@@ -379,6 +396,7 @@ var jt = function (elem) {
 	            rows[0].parentNode.appendChild(rows[0].parentNode.removeChild(rows[i]));
 	        }	  
 	    } else {
+	    //TODO: SURELY WE CAN JUST USE rows.sort(cleverfunction())?
 	    //use comb sort O(n log n)
 	        var gap = rows.length;
 	        var swapped = true;
@@ -408,7 +426,7 @@ var jt = function (elem) {
 	            }
 	        }
 	    }
-	    return tbl;
+	    return elem;
         };
     }
     return elem;
