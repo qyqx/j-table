@@ -4,8 +4,8 @@ var objColOptions = new function() {
     this.divColOptions = undefined;
     this.open = function(colH) {
 	//first, get the unique entries in the list into an array. then sort array.
-	colHead = jTable.h(colH);
-	colTable = jTable.t(colH);
+	colHead = jt(colH);
+	colTable = colHead.table();
 	divColOptions = document.getElementById('colOptions');
 	var divColOptionsFilter = document.getElementById('colOptionsFilter');
 	var filter = colHead.getFilter();
@@ -81,16 +81,22 @@ var objColOptions = new function() {
 var tableTransform = new function() {
     this.table = undefined;
     this.open = function(tbl) {
- 	table = jTable.t(tbl);
+ 	table = jt(tbl).table();
 	var divTableTransform = document.getElementById("tableTransform");
 	// unhide
 	var strUnhide = "";
 	tblHide = table.getHide();
-	for (var i=0; i<tblHide.length; i++) {
-	    strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + tblHide[i] + '">';
-	    strUnhide += '<label for="chkHide' + i + '">' + table.headData(tblHide[i]) + '</label></span>';
+	var col = 0;
+	var i = 0;
+	while (table.headerCell(col)) {
+	    if (table.headerCell(col).getHide()) {
+	        strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + col + '">';
+	        strUnhide += '<label for="chkHide' + i + '">' + table.headerData(col) + '</label></span>';
+	        i++;
+	    }
+	    col++;
 	}
-	if (strUnhide == "") {
+	if (i === 0) {
 	    strUnhide = '<span class="divOption"><input type="checkbox" id="chk_nonehidden" disabled><label for="chk_nonehidden">No columns hidden</label></span>';
 	}
 	document.getElementById('tableTransformUnhide').innerHTML = "<h4>Unhide:</h4> " + strUnhide;
@@ -105,11 +111,9 @@ var tableTransform = new function() {
     this.submit = function() {
 	//unhide
 	var chkHide = document.getElementsByName("chkUnhide");
-	var setHide = [];
-	for (var i=0; i<chkHide.length; i++) if (!chkHide[i].checked) {
-	    setHide.push(chkHide[i].value);
+	for (var i=0; i<chkHide.length; i++) if (chkHide[i].checked) {
+	    table.setHide(false, chkHide[i].value);
 	}
-	table.setHide(setHide);	
 	this.close();
     }
 }
@@ -166,46 +170,41 @@ var menu = new function() {
 }
 function mDown(e) {
     var e = e ? e : window.event;
-    var t = e.target ? e.target : e.srcElement;
-    var tbl = jTable.t(t);
-    var h = jTable.h(t);
-    var c = jTable.c(t);
+    var elem = jt(e.target ? e.target : e.srcElement);
+    if (!elem) {
+        return false;
+    }
     var tblOffsetLeft = 0;
-    var tempTbl = tbl;
+    var tempTbl = elem;
     while (tempTbl && !isNaN(tempTbl.offsetLeft)) {
         tblOffsetLeft += tempTbl.offsetLeft;
         tempTbl = tempTbl.parentNode
     }
     //remove all editCells;
-    while (jTable.c('editCell')) {
-        jTable.c('editCell').setEditMode(false);
-    }        
+    while (jt('editCell')) {
+        jt('editCell').setEditMode(false);
+    }
     //is it the sort/filter option in the header cell?
-    if (h) {
-    	if (e.clientX > (h.offsetLeft + h.offsetWidth + tblOffsetLeft - 10)) {
-            objColOptions.open(t);
+    if (/^td|th$/.test(elem.tagName.toLowerCase())) {
+        if (e.clientX > (tblOffsetLeft + elem.offsetWidth - 10)) {
+            objColOptions.open(elem);
 	    return;
-	} else if (e.clientX > (h.offsetLeft + h.offsetWidth + tblOffsetLeft - 20) &&
-   	 e.clientX < (h.offsetLeft + h.offsetWidth + tblOffsetLeft - 10)) {
+	} else if (e.clientX > (tblOffsetLeft + elem.offsetWidth - 20) && e.clientX < (tblOffsetLeft + elem.offsetWidth - 10)) {
    	    if (e.ctrlKey) {
-   	        if (!h.getSort()) {
-   	            tbl.setSort(tbl.getSort().concat([{cellIndex: h.cellIndex, 'dir': 'up'}]));
+   	        if (!elem.table().getSort()) {
+   	            elem.table().setSort(elem.table().getSort().concat([{cellIndex: elem.cellIndex, 'dir': 'up'}]));
    	        }
    	    } else {
-   	        h.setSort(h.getSort() == 'up' ? 'down' : 'up');
+   	        elem.setSort(elem.getSort() == 'up' ? 'down' : 'up');
    	    }
    	    return;
    	}
+   	elem.setEditMode(true);
+	elem.getElementsByTagName("div")[0].focus();
     }
     //is it the table transform dialog box?
-    if (t.tagName.toLowerCase() == 'caption' && e.clientX > (t.offsetLeft + t.offsetWidth  - 20)) {
-	tableTransform.open(t.parentNode);
+    if ((e.target ? e.target : e.srcElement).tagName.toLowerCase() == 'caption' && e.clientX > (elem.offsetLeft + elem.offsetWidth  - 20)) {
+	tableTransform.open(elem);
 	return;
-    }
-    //ok so it's a normal cell, let's edit it
-    if (c && !c.getEditMode()) {
-	c.setEditMode(true);
-	//alert(c.innerHTML);
-	c.getElementsByTagName("div")[0].focus();
     }
 }
