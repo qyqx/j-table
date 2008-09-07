@@ -43,7 +43,8 @@ thead th[data-filter][data-sort='up'] {background-image:url(testsuite_images/sor
 thead th[data-filter][data-sort='down'] {background-image:url(testsuite_images/sortdown-filter.jpg);}
 tr.filtered {display:none;}
 caption {background: url(testsuite_images/table-transform.jpg) no-repeat center right;}
-td div, th div {outline:1px solid blue; width:100%; height:1em}
+td div, th div {outline:1px solid blue; width:100%; height:1em;}
+td.hide, th.hide {display:none;}
 
 /*barchart*/
 svg {fill:none; stroke:black; stroke-width:1; width:100%; height:100%;}
