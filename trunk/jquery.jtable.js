@@ -1,34 +1,34 @@
 //TODO: WRAP in (function() {}) () as per http://docs.jquery.com/Plugins/Authoring
-var jTable = {
-    dataTypes: {
-        number: {
-            re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
-            swap: function(a,b) {
-                return Number(a) > Number(b);
-            }
-        },
-        currency: {
-            re: /^-?\d+(?:\.\d*)?$/i,
-            swap: function(a,b) {
-                return Number(a) > Number(b);
-            }
-        },
-        date: {
-            js: function(x) {
-                var scratch = new Date(x); 
-                return scratch.toString() !== 'NaN' && scratch.toString() !== 'Invalid Date';
-            },
-            swap: function(a,b) {
-                return Date.parse(a) > Date.parse(b);
-            }
-        },
-        string: {
-            swap: function(a,b) {
-                return a > b;
-            }
+jQuery.tableDataTypes = {
+    number: {
+        re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
+        swap: function(a,b) {
+            return Number(a) > Number(b);
         }
-    },    
-    cell: function(elem, row, col) {
+    },
+    currency: {
+        re: /^-?\d+(?:\.\d*)?$/i,
+        swap: function(a,b) {
+            return Number(a) > Number(b);
+        }
+    },
+    date: {
+        js: function(x) {
+            var scratch = new Date(x); 
+            return scratch.toString() !== 'NaN' && scratch.toString() !== 'Invalid Date';
+        },
+        swap: function(a,b) {
+            return Date.parse(a) > Date.parse(b);
+        }
+    },
+    string: {
+        swap: function(a,b) {
+            return a > b;
+        }
+    }
+};
+var jTable = {
+    tableCell: function(elem, row, col) {
         //returns the <td> at the relevant row and column
         if (elem.parentNode.parentNode.tagName.toLowerCase() === "tbody") {
             return elem;
@@ -37,15 +37,15 @@ var jTable = {
               jTable.table(elem).tBodies[0].rows[row].cells[col === undefined ? elem.cellIndex : col];
         }
     },
-    data: function(elem, row, col) {
+    tableData: function(elem, row, col) {
         //returns the text contents of cell(elem)
-        var cellDOM = jTable.cell(elem, row, col);
+        var cellDOM = jTable.tableCell(elem, row, col);
         if (!cellDOM) {
             return undefined;
         }
         return cellDOM.textContent ? cellDOM.textContent : cellDOM.innerText;
     },
-    headerCell: function(elem, col) {
+    tableHeaderCell: function(elem, col) {
         //returns the <th> element at the top of the relevant column
         if (elem.tagName.toLowerCase() === 'table') {
             return elem.tHead.rows[0].cells[col];
@@ -55,9 +55,9 @@ var jTable = {
         }
         return elem;
     },
-    headerData: function(elem, row) {
+    tableHeaderData: function(elem, row) {
         //returns the data in the <td> element at the top of the relevant column
-        var cellDOM = jTable.headerCell(elem, row);
+        var cellDOM = jTable.tableHeaderCell(elem, row);
         if (!cellDOM) {
             return undefined;
         }
@@ -71,26 +71,26 @@ var jTable = {
         }
         return parent;
     },
-    dataType: function(elem, col) {
+    tableDataType: function(elem, col) {
         //returns the elem's headerCell dataType. table.dataType requires cellIndex parameter
-        var headerCell = jTable.headerCell(elem, col);
+        var headerCell = jTable.tableHeaderCell(elem, col);
         if (headerCell.getAttribute("data-datatype")) {
             return headerCell.getAttribute("data-datatype");
         } else {
-            answer = jTable.calculateDataType(headerCell);
+            answer = jTable.tableCalculateDataType(headerCell);
             headerCell.setAttribute("data-datatype", answer);
             return answer;
         }
     },
-    calculateDataType: function(elem, col) {
+    tableCalculateDataType: function(elem, col) {
   	//check data type of first entry. then check if all others consistent, if not then string.
-	var headerCell = jTable.headerCell(elem);
+	var headerCell = jTable.tableHeaderCell(elem);
 	var i = 0;
 	var dataType, dataType_old;
 	calcCellDataType = function(data) {
 	    var answer = "string";
-	    for (var j in jTable.dataTypes) if (jTable.dataTypes.hasOwnProperty(j) && j !== 'string') {
-	        if ((!jTable.dataTypes[j].re || jTable.dataTypes[j].re.test(data)) && (!jTable.dataTypes[j].js || jTable.dataTypes[j].js(data))) {
+	    for (var j in jQuery.tableDataTypes) if (j !== 'string') {
+	        if ((!jQuery.tableDataTypes[j].re || jQuery.tableDataTypes[j].re.test(data)) && (!jQuery.tableDataTypes[j].js || jQuery.tableDataTypes[j].js(data))) {
 	            answer = j;
 	            break;
 	        }
@@ -98,10 +98,10 @@ var jTable = {
 	    return answer;	    
 	}
 	if (elem.tagName.toLowerCase() === 'td') {
-	    return calcCellDataType(elem.data());
+	    return calcCellDataType(jTable.tableData(elem));
 	}
-	while (jTable.cell(headerCell, i)) {
-	    dataType = calcCellDataType(jTable.data(headerCell, i));
+	while (jTable.tableCell(headerCell, i)) {
+	    dataType = calcCellDataType(jTable.tableData(headerCell, i));
 	    if (i === 0) {
 	        dataType_old = dataType;
 	    }
@@ -117,36 +117,38 @@ var jTable = {
 	}	
 	return dataType;
     },
-    hide: function(elem) {
+    tableHide: function(elem) {
         //gets / sets hide for a column. tables require extra cellIndex parameter
         var setHide = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
-        var colHead = jTable.headerCell(elem, arguments[1]);
-        var cellIndex1based = colHead.cellIndex + 1;
-        var table = jTable.table(elem); 
+        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
         if (setHide === undefined) {
             //it's a GET: return the boolean hidden state
-            return colHead && $(colHead).hasClass("hide");
+            return colHead.style.display === "none";
         } else {
             //it's a SET.
-            var currentHide = colHead && $(colHead).hasClass("hide");
+            var currentHide = colHead.style.display === "none";
+            var cellIndex1based = colHead.cellIndex + 1;
+            var table = jTable.table(elem); 
             if (setHide && !currentHide) {
-                $(table).find("tr *:nth-child(" + cellIndex1based + ")").addClass("hide");
+                $(table).find("tr *:nth-child(" + cellIndex1based + ")").css("display", "none");
             } 
             if (!setHide && currentHide) {
-                $(table).find("tr *:nth-child(" + cellIndex1based + ")").removeClass("hide");
+                $(table).find("tr *:nth-child(" + cellIndex1based + ")").css("display", "");
             }
             return elem;
         }
     },
-    filter: function(elem) {
+    tableFilter: function(elem) {
         var setFilter = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
-        var colHead = jTable.headerCell(elem, arguments[1]);
+        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
         var table = jTable.table(elem); 
         if (setFilter === undefined) {
            //it's a GET: returns the relevant header filter regexp.
             var isRegExp = /^\/(.+)\/$/.exec(colHead.getAttribute("data-filter"));
             if (isRegExp) {
                 return new RegExp(isRegExp[1]);
+            } else {
+                return false;
             }
         } else {
             //it's a SET. sets the filter regexp for the relevant header, pass false to remove it
@@ -161,12 +163,12 @@ var jTable = {
 	    var filters = [];
 	    var headerCell;
 	    while (true) {
-	        headerCell = jTable.headerCell(table, col);
+	        headerCell = jTable.tableHeaderCell(table, col);
 	        if (!headerCell) {
 	            break;
 	        }
 	        if (headerCell.getAttribute("data-filter")) {
-	            filters.push({cellIndex: col, filter: jTable.filter(headerCell)});
+	            filters.push({cellIndex: col, filter: jTable.tableFilter(headerCell)});
 	        }
 	        col++;
 	    }
@@ -177,7 +179,7 @@ var jTable = {
 	        rowpass = true;
 	        for (var j=0; j < filters.length; j++) {
 	        //if any of the filters doesn't match, then mark the row as filtered
-	            if (!filters[j].filter.test(elem.table().data(irow, filters[j].cellIndex))) {
+	            if (!filters[j].filter.test(jTable.tableData(table, irow, filters[j].cellIndex))) {
 	                rowpass = false;
 	                break;
 	            }
@@ -219,7 +221,7 @@ jQuery.each(jTable, function(i) {
         if (answer.length === 0) {
             return undefined;
         }
-        if (/^function|object$/.test(typeof answer[0])) {
+        if (answer[0].style) { //crude test: is it a DOM object
             return jQuery(answer);
         } else {
             return answer;

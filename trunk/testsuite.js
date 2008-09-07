@@ -1,49 +1,49 @@
 module("Table Traversal");
 test("cell.table", function() {
-    ok($('#testTable').cell(10,10) === undefined, "cell(row, col) should pass undefined for cells out of bounds");
-    equals($('#testTable').cell(0,1).attr("id"), 'testCell1', "cell(0,1) should return the correct cell");
-    equals($('#testTable').cell(1,3).attr("id"), 'testCell2', "cell(1,3) should return the relevant cell");
+    ok($('#testTable').tableCell(10,10) === undefined, "cell(row, col) should pass undefined for cells out of bounds");
+    equals($('#testTable').tableCell(0,1).attr("id"), 'testCell1', "cell(0,1) should return the correct cell");
+    equals($('#testTable').tableCell(1,3).attr("id"), 'testCell2', "cell(1,3) should return the relevant cell");
 });
 test("cell.header", function() {
-    ok($('#testColHeader').cell(10) === undefined, "cell(row) should pass undefined for cells out of bounds");
-    equals($('#testColHeader').cell(0).attr("id"), 'testCell1', "cell(0) should return the first cell");
-    equals($('#testColHeader').cell(1).attr("id"), 'testCell3', "cell(1) should return the relevant cell");
+    ok($('#testColHeader').tableCell(10) === undefined, "cell(row) should pass undefined for cells out of bounds");
+    equals($('#testColHeader').tableCell(0).attr("id"), 'testCell1', "cell(0) should return the first cell");
+    equals($('#testColHeader').tableCell(1).attr("id"), 'testCell3', "cell(1) should return the relevant cell");
 });
 test("cell.cell", function() {
-    equals($('#testCell1').cell().attr("id"), 'testCell1', "cell() should return itself for cells");  
+    equals($('#testCell1').tableCell().attr("id"), 'testCell1', "cell() should return itself for cells");  
 });
 test("data.table", function() {
-    ok($('#testTable').data(10,10) === undefined, "data(row, col) should pass undefined for cells out of bounds");
-    equals($('#testTable').data(0,0), 'USA', "data(0,0) should return the first cell contents");
-    equals($('#testTable').data(1,3), 120, "data(1,3) should return the relevant cell contents");
+    ok($('#testTable').tableData(10,10) === undefined, "data(row, col) should pass undefined for cells out of bounds");
+    equals($('#testTable').tableData(0,0), 'USA', "data(0,0) should return the first cell contents");
+    equals($('#testTable').tableData(1,3), 120, "data(1,3) should return the relevant cell contents");
 });
 test("data.header", function() {
-    ok($('#testColHeader').data(10) === undefined, "data(row) should pass undefined for cells out of bounds");
-    equals($('#testColHeader').data(0), 100, "data(0) should return the first cell data");
-    equals($('#testColHeader').data(1), 50, "data(1) should return the relevant cell data");
+    ok($('#testColHeader').tableData(10) === undefined, "data(row) should pass undefined for cells out of bounds");
+    equals($('#testColHeader').tableData(0), 100, "data(0) should return the first cell data");
+    equals($('#testColHeader').tableData(1), 50, "data(1) should return the relevant cell data");
 });
 test("data.cell", function() {
-    equals($('#testCell1').data(), 100, "data() should return its contents for cells");
+    equals($('#testCell1').tableData(), 100, "data() should return its contents for cells");
 });
 test("headercell.table", function() {
-    equals($('#testTable').headerCell(1).attr("id"), 'testColHeader', "headerCell(col) should return the correct header cell");
-    ok($('#testTable').headerCell(100) === undefined, "headerCell(col) should return undefined if col is out of bounds");
+    equals($('#testTable').tableHeaderCell(1).attr("id"), 'testColHeader', "headerCell(col) should return the correct header cell");
+    ok($('#testTable').tableHeaderCell(100) === undefined, "headerCell(col) should return undefined if col is out of bounds");
 });
 test("headercell.header", function() {
-    equals($('#testColHeader').headerCell().attr("id"), 'testColHeader', "headerCell should return itself for headers");
+    equals($('#testColHeader').tableHeaderCell().attr("id"), 'testColHeader', "headerCell should return itself for headers");
 });
 test("headercell.cell", function() {
-    equals($('#testCell1').headerCell().attr("id"), 'testColHeader', "headerCell() should return the header cell of a cell");
+    equals($('#testCell1').tableHeaderCell().attr("id"), 'testColHeader', "headerCell() should return the header cell of a cell");
 });
 test("headerdata.table", function() {
-    equals($('#testTable').headerData(1), 'Q1', "headerData(col) didn't return the correct header contents");
-    ok($('#testTable').headerData(100) === undefined, ".headerData(col) should return undefined if col is out of bounds");
+    equals($('#testTable').tableHeaderData(1), 'Q1', "headerData(col) didn't return the correct header contents");
+    ok($('#testTable').tableHeaderData(100) === undefined, "headerData(col) should return undefined if col is out of bounds");
 });
 test("headerdata.header", function() {
-    equals($('#testColHeader').headerData(), 'Q1', "headerData should return its contents for a header");
+    equals($('#testColHeader').tableHeaderData(), 'Q1', "headerData should return its contents for a header");
 });
 test("headerdata.cell", function() {
-    equals($('#testCell1').headerData(), 'Q1', "headerData() should return the contents of the relevant header cell");
+    equals($('#testCell1').tableHeaderData(), 'Q1', "headerData() should return the contents of the relevant header cell");
 });
 test("table.table", function() {
     equals($('#testTable').table().attr("id"), 'testTable', "table() should return itself for tables");
@@ -57,37 +57,113 @@ test("table.cell", function() {
 
 module("DataType, Hide, Filter");
 test("datatype", function() {
-    equals($('#testTable').dataType(0), 'string', "incorrect table data types");
-    equals($('#testColHeader').dataType(), 'number', 'incorrect column data types');
-    equals($('#testCell1').dataType(), 'number', 'incorrect column data type');
+    equals($('#testTable').tableDataType(0), 'string', "incorrect table data types");
+    equals($('#testColHeader').tableDataType(), 'number', 'incorrect column data types');
+    equals($('#testCell1').tableDataType(), 'number', 'incorrect column data type');
+});
+test("hide.cell", function () {
+    ok($('#testCell1').tableHide()[0] === false, "getHide() didn't work");
+    $('#testCell1').tableHide(true);
+    ok($('#testCell1').tableHide()[0], "setHide() didn't work");
+    $('#testCell1').tableHide(false);
 });
 test("hide.header", function () {
-    ok($('#testColHeader').hide()[0] === false, "getHide() didn't work");
-    $('#testColHeader').hide(true);
-    ok($('#testColHeader').hide()[0], "setHide() didn't work");
-    $('#testColHeader').hide(false);
+    ok($('#testColHeader').tableHide()[0] === false, "getHide() didn't work");
+    $('#testColHeader').tableHide(true);
+    ok($('#testColHeader').tableHide()[0], "setHide() didn't work");
+    $('#testColHeader').tableHide(false);
 });
 test("hide.table", function () {
-    ok($('#testTable').hide(1)[0] === false, "getHide() didn't work");
-    $('#testTable').hide(1, true);
-    ok($('#testTable').hide(1)[0], "setHide() didn't work");
-    $('#testTable').hide(1, false);
+    ok($('#testTable').tableHide(1)[0] === false, "getHide() didn't work");
+    $('#testTable').tableHide(1, true);
+    ok($('#testTable').tableHide(1)[0], "setHide() didn't work");
+    $('#testTable').tableHide(1, false);
+});
+test("filter.cell", function () {
+    equals($('#testCell1').tableFilter()[0], false, "getFilter() didn't return an empty object");
+    var header = $('#testCell1').tableFilter(/^50|60$/).tableHeaderCell();
+    var i = 0;
+    var cell;
+    while (true) {
+        cell = header.tableCell(i++);
+        if (!cell) {
+            break;
+        }
+        equals(cell.hasClass("filtered"), cell.tableData() === "100", "setFilter didn't filter properly");
+    }
+    $('#testCell1').tableFilter(false);
 });
 test("filter.header", function () {
-    equals($('#testColHeader').filter()[0], undefined, "getFilter() didn't return an empty object");
-    var header = $('#testColHeader').filter(/^50|60$/);
-    var rows = $('#testTable').tBodies[0].rows;
-    for (var i = 0; i < rows.length; i++) {
-       equals(rows[i].className.search("filtered") >= 0, header.data(i) === "100", "setFilter didn't filter properly");
+    equals($('#testColHeader').tableFilter()[0], false, "getFilter() didn't return an empty object");
+    var header = $('#testColHeader').tableFilter(/^50|60$/);
+    var i = 0;
+    var cell;
+    while (true) {
+        cell = header.tableCell(i++);
+        if (!cell) {
+            break;
+        }
+        equals(cell.hasClass("filtered"), cell.tableData() === "100", "setFilter didn't filter properly");
     }
-    $('#testColHeader').filter(false);
+    header.tableFilter(false);
 });
 test("filter.table", function () {
-    equals($('#testTable').filter(1)[0], undefined, "getFilter() didn't return an empty object");
-    var header = $('#testTable').filter(/^50|60$/, 1).headerCell(1);
-    var rows = $('#testTable').tBodies[0].rows;
-    for (var i = 0; i < rows.length; i++) {
-        equals(header.cell(i).parentNode.className.search("filtered") >= 0, header.data(i) === "100", "setFilter didn't filter properly");
+    equals($('#testTable').tableFilter(1)[0], false, "getFilter() didn't return an empty object");
+    var header = $('#testTable').tableFilter(1, /^50|60$/).tableHeaderCell(1);
+    var i = 0;
+    var cell;
+    while (true) {
+        cell = header.tableCell(i++);
+        if (!cell) {
+            break;
+        }
+        equals(cell.hasClass("filtered"), cell.tableData() === "100", "setFilter didn't filter properly");
     }
-    $('#testTable').filter(1, false);
+    $('#testTable').tableFilter(1, false);
+});
+test("sort.table)", function() {
+    setUp : function () {
+        this.data = jt('testTable').getSort();
+    },
+    tearDown : function () {
+        delete this.data;
+        jt('testTable').setSort([]);
+    },
+    _should: {
+        error: {
+            testSetSortNoArray: TypeError,
+            testSetSortNoCellIndex: TypeError,
+            testSetSortNoDir: TypeError
+        }	
+    },
+    testGetSort: function () {
+        assert.isArray(this.data, "table.getSort() should return an array");
+        for (var i=0; i<this.data.length; i++) {
+            assert.isNumber(this.data[i].cellIndex, "cellIndex should be a number");
+            assert.isString(this.data[i].dir, "dir should be a string");
+        }
+    },
+    testSetSortNoArray: function() {
+        jt('testTable').setSort('hello');	
+    },
+    testSetSortNoCellIndex: function() {
+        jt('testTable').setSort([{dir: 'up'}]);
+    },
+    testSetSortNoDir: function() {
+        jt('testTable').setSort([{cellIndex: 2, typo: 'up'}]);
+    },
+    testSetSingleSort: function() {
+        var tbl = jt('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
+        assert.areEqual(tbl.getSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
+        assert.areEqual(tbl.getSort()[0].dir, 'up', "setSort did not respect dir");
+        assert.areEqual(tbl.data(0, 0), 'UK', 'setSort did not sort correctly');
+        assert.areEqual(tbl.data(1, 0), 'France', 'setSort did not sort correctly');
+    },
+    testSetMultipleSort: function() {
+        var tbl = jt('testTable').setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
+        assert.areEqual(tbl.getSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
+        assert.areEqual(tbl.getSort()[1].dir, 'up', "setSort did not respect the second dir");
+        assert.areEqual(tbl.data(0, 0), 'France', 'setSort did not multi-sort correctly');
+        assert.areEqual(tbl.data(1, 0), 'USA', 'setSort did not multi-sort correctly');    
+    }
 });
