@@ -121,49 +121,48 @@ test("filter.table", function () {
     }
     $('#testTable').tableFilter(1, false);
 });
-test("sort.table)", function() {
-    setUp : function () {
-        this.data = jt('testTable').getSort();
-    },
-    tearDown : function () {
-        delete this.data;
-        jt('testTable').setSort([]);
-    },
-    _should: {
-        error: {
-            testSetSortNoArray: TypeError,
-            testSetSortNoCellIndex: TypeError,
-            testSetSortNoDir: TypeError
-        }	
-    },
-    testGetSort: function () {
-        assert.isArray(this.data, "table.getSort() should return an array");
-        for (var i=0; i<this.data.length; i++) {
-            assert.isNumber(this.data[i].cellIndex, "cellIndex should be a number");
-            assert.isString(this.data[i].dir, "dir should be a string");
-        }
-    },
-    testSetSortNoArray: function() {
-        jt('testTable').setSort('hello');	
-    },
-    testSetSortNoCellIndex: function() {
-        jt('testTable').setSort([{dir: 'up'}]);
-    },
-    testSetSortNoDir: function() {
-        jt('testTable').setSort([{cellIndex: 2, typo: 'up'}]);
-    },
-    testSetSingleSort: function() {
-        var tbl = jt('testTable').setSort([{cellIndex: 1, dir: 'up'}]);
-        assert.areEqual(tbl.getSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
-        assert.areEqual(tbl.getSort()[0].dir, 'up', "setSort did not respect dir");
-        assert.areEqual(tbl.data(0, 0), 'UK', 'setSort did not sort correctly');
-        assert.areEqual(tbl.data(1, 0), 'France', 'setSort did not sort correctly');
-    },
-    testSetMultipleSort: function() {
-        var tbl = jt('testTable').setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
-        assert.areEqual(tbl.getSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
-        assert.areEqual(tbl.getSort()[1].dir, 'up', "setSort did not respect the second dir");
-        assert.areEqual(tbl.data(0, 0), 'France', 'setSort did not multi-sort correctly');
-        assert.areEqual(tbl.data(1, 0), 'USA', 'setSort did not multi-sort correctly');    
+test("sort.table", function() {
+    var table = $('#testTable');
+    var getSort = table.tableSort();
+    var myError = "";
+    try {
+        myError = false;
+        table.tableSort("hello");
+    } catch (e) {
+        myError = true;
     }
+    ok(myError, "tableSort() should throw error if not passed Array")
+    try {
+        myError = false;
+        table.tableSort([{dir: 'up'}]);
+    } catch (e) {
+        myError = true;
+    }
+    ok(myError, "tableSort() should throw error if not passed cellIndex")
+    try {
+        myError = false;
+        table.tableSort([{cellIndex: 2, typo: 'up'}]);
+    } catch (e) {
+        myError = true;
+    }
+    ok(myError, "tableSort() should throw error if passed incorrect dir")
+    //test Single Sort
+    table.tableSort([{cellIndex: 1, dir: 'up'}]);
+    equals(table.tableSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
+    equals(table.tableSort()[0].dir, 'up', "setSort did not respect dir");
+    equals(table.tableData(0, 0), 'UK', 'setSort did not sort correctly');
+    equals(table.tableData(1, 0), 'France', 'setSort did not sort correctly');
+    //test Multiple Sort
+    table.setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
+    equals(table.tableSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
+    equals(table.tableSort()[1].dir, 'up', "setSort did not respect the second dir");
+    equals(table.tableData(0, 0), 'France', 'setSort did not multi-sort correctly');
+    equals(table.tableData(1, 0), 'USA', 'setSort did not multi-sort correctly');
+    //more typeof checking for incorrect parameters
+    for (var i=0; i<getSort.length; i++) {
+        equals(typeof(getSort[i].cellIndex), "number", "cellIndex should be a number");
+        equals(typeof(getSort[i].dir), "string", "dir should be a string");
+    }
+    //set back to nothing
+    table.setSort([]);
 });
