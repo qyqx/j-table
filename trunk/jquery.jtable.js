@@ -117,47 +117,78 @@ var jTable = {
 	}	
 	return dataType;
     },
-    hide: function(elem, setHide, col) {
-        var colDOM;
+    hide: function(elem) {
+        //gets / sets hide for a column. tables require extra cellIndex parameter
+        var setHide = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
+        var colHead = jTable.headerCell(elem, arguments[1]);
+        var cellIndex1based = colHead.cellIndex + 1;
+        var table = jTable.table(elem); 
         if (setHide === undefined) {
-            //returns the hidden state (true or false). table.getHide requires cellIndex parameter.
-            colDOM = jTable.table(elem).getElementsByTagName("col")[elem.cellIndex === undefined ? col : elem.cellIndex];
-            if (colDOM && (colDOM.style.visibility === 'collapse' || colDOM.style.display === 'none')) {
-                return true;
-            }
-            return false;
+            //it's a GET: return the boolean hidden state
+            return colHead && $(colHead).hasClass("hide");
         } else {
-            //sets the hidden state (true or false). table.setHide requires extra cellIndex parameter.
-            var currentHide = jTable.hide(elem.getHide(arguments[1]));
-            var colgroup = elem.table().getElementsByTagName("colgroup")[0];
-            //create the colgroup if it doesn't already exist
-            if (!colgroup) {
-                colgroup = elem.table().appendChild(document.createElement("colgroup"));
-            }
-            //create the cols if they don't already exist in the right number
-            if (colgroup.getElementsByTagName("col").length !== elem.table().tHead.rows[0].cells.length) {
-                for (var i=0; i<colgroup.getElementsByTagName("col").length; i++) {
-                    colgroup.removeChild(colgroup.getElementsByTagName("col")[i]);
-                }
-                for (i=0; i < elem.table().tHead.rows[0].cells.length; i++) {
-                    colgroup.appendChild(document.createElement("col"));
-                }	
-            }
-            colDOM = colgroup.getElementsByTagName("col")[arguments[1] || elem.cellIndex];
-            try { //Fx, Safari
-                if (setHide && !currentHide) {
-                    colDOM.style.visibility = 'collapse';
-                } 
-            } catch(err) {
-                colDOM.style.display = 'none';
-            }
+            //it's a SET.
+            var currentHide = colHead && $(colHead).hasClass("hide");
+            if (setHide && !currentHide) {
+                $(table).find("tr *:nth-child(" + cellIndex1based + ")").addClass("hide");
+            } 
             if (!setHide && currentHide) {
-                if (colDOM.style.display === 'none') {
-                    colDOM.style.display = '';
-                } else {
-                    colDOM.style.visibility = '';
-                }
+                $(table).find("tr *:nth-child(" + cellIndex1based + ")").removeClass("hide");
             }
+            return elem;
+        }
+    },
+    filter: function(elem) {
+        var setFilter = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
+        var colHead = jTable.headerCell(elem, arguments[1]);
+        var table = jTable.table(elem); 
+        if (setFilter === undefined) {
+           //it's a GET: returns the relevant header filter regexp.
+            var isRegExp = /^\/(.+)\/$/.exec(colHead.getAttribute("data-filter"));
+            if (isRegExp) {
+                return new RegExp(isRegExp[1]);
+            }
+        } else {
+            //it's a SET. sets the filter regexp for the relevant header, pass false to remove it
+            if (setFilter === false) {
+                colHead.removeAttribute("data-filter");
+            }
+            else {
+                colHead.setAttribute("data-filter", setFilter);
+            }
+	    //build the filters array, [{cellIndex: n, filter: /filterme/},...]
+	    var col = 0;
+	    var filters = [];
+	    var headerCell;
+	    while (true) {
+	        headerCell = jTable.headerCell(table, col);
+	        if (!headerCell) {
+	            break;
+	        }
+	        if (headerCell.getAttribute("data-filter")) {
+	            filters.push({cellIndex: col, filter: jTable.filter(headerCell)});
+	        }
+	        col++;
+	    }
+	    //iterate through each row, put filter in then remove if necessary
+	    var rows = table.tBodies[0].rows;
+	    var rowpass;
+	    for (var irow=0; irow < rows.length; irow++) {
+	        rowpass = true;
+	        for (var j=0; j < filters.length; j++) {
+	        //if any of the filters doesn't match, then mark the row as filtered
+	            if (!filters[j].filter.test(elem.table().data(irow, filters[j].cellIndex))) {
+	                rowpass = false;
+	                break;
+	            }
+	        }
+	        if (rowpass) {
+	            $(rows[irow]).removeClass("filtered");
+	        }
+	        else if (!$(rows[irow]).hasClass("filtered")) {
+	            $(rows[irow]).addClass("filtered");
+	        }
+   	    }
             return elem;
         }
     }
@@ -181,7 +212,7 @@ jQuery.each(jTable, function(i) {
             }
             //sort is an exception because we *want* nodelist.sort() to do multiple sort
             temp = that(node, jTableArgs[0], jTableArgs[1]);
-            if (temp) {
+            if (temp !== undefined) {
                 answer.push(temp);
             }
         });

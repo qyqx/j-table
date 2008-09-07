@@ -62,32 +62,32 @@ test("datatype", function() {
     equals($('#testCell1').dataType(), 'number', 'incorrect column data type');
 });
 test("hide.header", function () {
-    equals($('#testColHeader').getHide(), false, "getHide() didn't work");
-    $('#testColHeader').setHide(true);
-    equals($('#testColHeader').getHide(), true, "setHide() didn't work");
-    $('#testColHeader').setHide(false);
+    ok($('#testColHeader').hide()[0] === false, "getHide() didn't work");
+    $('#testColHeader').hide(true);
+    ok($('#testColHeader').hide()[0], "setHide() didn't work");
+    $('#testColHeader').hide(false);
 });
 test("hide.table", function () {
-    equals($('#testTable').getHide(1), false, "getHide() didn't work");
-    $('#testTable').setHide(true, 1);
-    equals($('#testTable').getHide(1), true, "setHide() didn't work");
-    $('#testTable').setHide(false, 1);
+    ok($('#testTable').hide(1)[0] === false, "getHide() didn't work");
+    $('#testTable').hide(1, true);
+    ok($('#testTable').hide(1)[0], "setHide() didn't work");
+    $('#testTable').hide(1, false);
 });
 test("filter.header", function () {
-    equals($('#testColHeader').getFilter(), undefined, "getFilter() didn't return an empty object");
-    var header = $('#testColHeader').setFilter(/^50|60$/);
+    equals($('#testColHeader').filter()[0], undefined, "getFilter() didn't return an empty object");
+    var header = $('#testColHeader').filter(/^50|60$/);
     var rows = $('#testTable').tBodies[0].rows;
     for (var i = 0; i < rows.length; i++) {
        equals(rows[i].className.search("filtered") >= 0, header.data(i) === "100", "setFilter didn't filter properly");
     }
-    $('#testColHeader').setFilter();
+    $('#testColHeader').filter(false);
 });
 test("filter.table", function () {
-    equals($('#testTable').getFilter(1), undefined, "getFilter() didn't return an empty object");
-    var header = $('#testTable').setFilter(/^50|60$/, 1).headerCell(1);
+    equals($('#testTable').filter(1)[0], undefined, "getFilter() didn't return an empty object");
+    var header = $('#testTable').filter(/^50|60$/, 1).headerCell(1);
     var rows = $('#testTable').tBodies[0].rows;
     for (var i = 0; i < rows.length; i++) {
         equals(header.cell(i).parentNode.className.search("filtered") >= 0, header.data(i) === "100", "setFilter didn't filter properly");
     }
-    $('#testTable').setFilter(undefined, 1);
+    $('#testTable').filter(1, false);
 });
