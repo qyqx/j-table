@@ -193,6 +193,100 @@ var jTable = {
    	    }
             return elem;
         }
+    },
+    tableSort: function (elem, setSort) {
+        var tbl = jTable.table(elem);
+        if (setSort === undefined) {
+            //GET SORT. for columns returns "up", "down" or undefined
+            //for tables returns array [{cellIndex:n, dir: 'up'}, ...]
+            var aSort = [], hSort;
+            if (elem.tagName.toLowerCase() === 'th') {
+                return elem.getAttribute("data-sort");
+            } else {
+                if (tbl.getAttribute("data-sortOrder")) {
+                    hSort = tbl.getAttribute("data-sortOrder").split(",");
+                    for (var i=0; i<hSort.length; i++) {
+                        aSort.push({cellIndex: hSort[i], dir: elem.headerCell(hSort[i]).tableSort()});
+                    }
+                }
+                return aSort;
+            }
+        } else {
+            //SET SORT
+            var i;
+            if (elem.tagName.toLowerCase() === 'th') {
+                if (setSort) {
+                    setSort = [{cellIndex: elem.cellIndex, dir: setSort}];
+                } else {
+                    setSort = [];
+                }
+            }
+            if (typeof setSort !== "object" || setSort.constructor !== Array) {
+                throw new TypeError ("setSort() expects an array parameter");
+            }
+            for (i=0; i<setSort.length; i++) {
+                if (setSort[i].cellIndex === undefined || setSort[i].dir === undefined) {
+                    throw new TypeError ("setSort() expects cellIndex and dir for array item " + i);
+                }
+            }
+    	    //this is a comb sort. O(n log n), but O(n) if already sorted
+	    //for now, just sort using first item in sort array
+	    var currentSort = tbl.tableSort();
+	    var rows = tbl.tBodies[0].rows;
+	    //update sort attributes
+	    i = 0;
+	    while (tbl.headerCell(i)) {
+	        tbl.headerCell(i).removeAttribute("data-sort");
+	        i++;
+	    }
+	    var sortOrder = [];
+	    for (i=0; i < setSort.length; i++)  {
+	        tbl.headerCell(setSort[i].cellIndex).setAttribute("data-sort", setSort[i].dir);
+	        sortOrder.push(setSort[i].cellIndex);
+	    }
+	    tbl.setAttribute("data-sortOrder", sortOrder.join(","));
+	    if (setSort.length === 0) {
+	        return tbl;
+	    }
+	    //if it's already sorted the opposite way, just reflect it
+	    if (currentSort.length === 1 && setSort.length === 1 && currentSort[0].cellIndex === setSort[0].cellIndex &&
+	      currentSort[0].dir !== setSort[0].dir) {
+	        for (i=rows.length - 1; i>=0; i--) {
+	            rows[0].parentNode.appendChild(rows[0].parentNode.removeChild(rows[i]));
+	        }	  
+	    } else {
+	    //TODO: SURELY WE CAN JUST USE rows.sort(cleverfunction())?
+	    //use comb sort O(n log n)
+	        var gap = rows.length;
+	        var swapped = true;
+	        var swapResult;
+	        var a, b;
+	        while (gap > 1 || swapped) {
+	       //update the gap value for a next comb
+	            if (gap > 1) {
+	                gap = Math.floor (gap / 1.3);
+	                if (gap === 10 || gap === 9) {
+	                    gap = 11;
+	                }
+	            }
+	            swapped = false;
+	            //a single "comb" over the input list
+	            for (i=0; i + gap < rows.length; i++) for (var j=0; j<setSort.length; j++) {
+	                a = tbl.data(i, setSort[j].cellIndex);
+	                b = tbl.data(i + gap, setSort[j].cellIndex);
+	                if (a !== b) {
+	                    if (dataTypes[tbl.dataType(setSort[j].cellIndex)].swap(a,b) ? setSort[j].dir === 'up' : setSort[j].dir === 'down') {
+	                        var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
+	   	                rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
+		     	        swapped = true;
+	                    } 
+	                    break;
+	                }
+	            }
+	        }
+	    }
+	    return elem;
+        }
     }
 }
 jQuery.each(jTable, function(i) {
