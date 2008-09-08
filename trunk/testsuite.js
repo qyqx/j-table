@@ -55,7 +55,7 @@ test("table.cell", function() {
     equals($('#testCell1').table().attr("id"), 'testTable', "table() should return the parent table for cells");
 });
 
-module("DataType, Hide, Filter");
+module("Table Manipulation");
 test("datatype", function() {
     equals($('#testTable').tableDataType(0), 'string', "incorrect table data types");
     equals($('#testColHeader').tableDataType(), 'number', 'incorrect column data types');
@@ -123,7 +123,6 @@ test("filter.table", function () {
 });
 test("sort.table", function() {
     var table = $('#testTable');
-    var getSort = table.tableSort();
     var myError = "";
     try {
         myError = false;
@@ -131,14 +130,14 @@ test("sort.table", function() {
     } catch (e) {
         myError = true;
     }
-    ok(myError, "tableSort() should throw error if not passed Array")
+    ok(myError, "tableSort(table) should throw error if not passed Array")
     try {
         myError = false;
         table.tableSort([{dir: 'up'}]);
     } catch (e) {
         myError = true;
     }
-    ok(myError, "tableSort() should throw error if not passed cellIndex")
+    ok(myError, "tableSort(table) should throw error if not passed cellIndex")
     try {
         myError = false;
         table.tableSort([{cellIndex: 2, typo: 'up'}]);
@@ -148,21 +147,83 @@ test("sort.table", function() {
     ok(myError, "tableSort() should throw error if passed incorrect dir")
     //test Single Sort
     table.tableSort([{cellIndex: 1, dir: 'up'}]);
-    equals(table.tableSort()[0].cellIndex, 1, "setSort did not respect cellIndex");
-    equals(table.tableSort()[0].dir, 'up', "setSort did not respect dir");
+    equals(table.tableSort()[0][0].cellIndex, 1, "setSort did not respect cellIndex");
+    equals(table.tableSort()[0][0].dir, 'up', "setSort did not respect dir");
     equals(table.tableData(0, 0), 'UK', 'setSort did not sort correctly');
     equals(table.tableData(1, 0), 'France', 'setSort did not sort correctly');
     //test Multiple Sort
-    table.setSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
-    equals(table.tableSort()[1].cellIndex, 3, "setSort did not respect the second cellIndex");
-    equals(table.tableSort()[1].dir, 'up', "setSort did not respect the second dir");
+    table.tableSort([{cellIndex: 2, dir: 'down'}, {cellIndex: 3, dir: 'up'}]);
+    equals(table.tableSort()[0][1].cellIndex, 3, "setSort did not respect the second cellIndex");
+    equals(table.tableSort()[0][1].dir, 'up', "setSort did not respect the second dir");
     equals(table.tableData(0, 0), 'France', 'setSort did not multi-sort correctly');
     equals(table.tableData(1, 0), 'USA', 'setSort did not multi-sort correctly');
-    //more typeof checking for incorrect parameters
-    for (var i=0; i<getSort.length; i++) {
-        equals(typeof(getSort[i].cellIndex), "number", "cellIndex should be a number");
-        equals(typeof(getSort[i].dir), "string", "dir should be a string");
-    }
     //set back to nothing
-    table.setSort([]);
+    table.tableSort([]);
+});
+test("sort.header", function() {
+    var header = $('#testColHeader');
+    var myError = "";
+    try {
+        myError = false;
+        header.tableSort("hello");
+    } catch (e) {
+        myError = true;
+    }
+    ok(myError, "tableSort() should throw error if passed incorrect dir")
+    //test Single Sort
+    header.tableSort('up');
+    equals(header.tableSort()[0], "up", "setSort didn't sort");
+    equals(header.tableData(0), '50', 'setSort did not sort correctly');
+    equals(header.tableData(1), '60', 'setSort did not sort correctly');
+    //set back to nothing
+    header.tableSort('');
+});
+test("sort.cell", function() {
+    var cell = $('#testCell1');
+    var header = cell.tableHeaderCell();
+    var myError = "";
+    try {
+        myError = false;
+        cell.tableSort("hello");
+    } catch (e) {
+        myError = true;
+    }
+    ok(myError, "tableSort() should throw error if passed incorrect dir")
+    //test Single Sort
+    cell.tableSort('up');
+    equals(cell.tableSort()[0], "up", "setSort didn't sort");
+    equals(header.tableData(0), '50', 'setSort did not sort correctly');
+    equals(header.tableData(1), '60', 'setSort did not sort correctly');
+    //set back to nothing
+    cell.tableSort('');
+});
+test("editMode.table", function () {
+    var table = $('#testTable');
+    ok(table.tableCellEditMode() === undefined, "table.tableCellEditMode() should return undefined");
+    var myError = "";
+    try {
+        myError = false;
+        table.editMode(true);
+    } catch (e) {
+        myError = true;
+    }
+    ok(myError, "table.editMode(x) should throw error")
+});
+test("editMode.header", function () {
+    var cell = $('#testColHeader');
+    ok(cell.tableCellEditMode()[0] === false, "editMode() should return false");
+    cell.tableCellEditMode(true);
+    ok(cell.tableCellEditMode()[0], "editMode() should return true");
+    equals(cell.get()[0].getElementsByTagName("div").length, 1, "editMode() did not make a cell editable");
+    cell.tableCellEditMode(false);
+    equals(cell.tableCellEditMode()[0], false, "editMode() should return back to false");
+});
+test("editMode.cell", function () {
+    var cell = $('#testCell1');
+    ok(cell.tableCellEditMode()[0] === false, "editMode() should return false");
+    cell.tableCellEditMode(true);
+    ok(cell.tableCellEditMode()[0], "editMode() should return true");
+    equals(cell.get()[0].getElementsByTagName("div").length, 1, "editMode() did not make a cell editable");
+    cell.tableCellEditMode(false);
+    equals(cell.tableCellEditMode()[0], false, "editMode() should return back to false");
 });
