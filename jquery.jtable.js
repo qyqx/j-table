@@ -30,7 +30,7 @@ jQuery.tableDataTypes = {
 var jTable = {
     tableCell: function(elem, row, col) {
         //returns the <td> at the relevant row and column
-        if (elem.parentNode.parentNode.tagName.toLowerCase() === "tbody") {
+        if (elem.parentNode !== undefined && elem.parentNode.parentNode.tagName.toLowerCase() === "tbody") {
             return elem;
         } else {
             return jTable.table(elem).tBodies[0].rows[row] && 
@@ -66,7 +66,7 @@ var jTable = {
     table: function(elem) {
         //returns node's container <table> element
         var parent = elem;
-        while (parent.tagName.toLowerCase() !== 'table') {
+        while (parent && parent.tagName.toLowerCase() !== 'table') {
             parent = parent.parentNode;
         }
         return parent;
@@ -200,13 +200,13 @@ var jTable = {
             //GET SORT. for columns returns "up", "down" or undefined
             //for tables returns array [{cellIndex:n, dir: 'up'}, ...]
             var aSort = [], hSort;
-            if (elem.tagName.toLowerCase() === 'th') {
-                return elem.getAttribute("data-sort");
+            if (elem.tagName.toLowerCase() === 'th' || elem.tagName.toLowerCase() === 'td') {
+                return jTable.tableHeaderCell(elem).getAttribute("data-sort");
             } else {
                 if (tbl.getAttribute("data-sortOrder")) {
                     hSort = tbl.getAttribute("data-sortOrder").split(",");
                     for (var i=0; i<hSort.length; i++) {
-                        aSort.push({cellIndex: hSort[i], dir: elem.headerCell(hSort[i]).tableSort()});
+                        aSort.push({cellIndex: hSort[i], dir: jTable.tableSort(jTable.tableHeaderCell(elem, hSort[i]))});
                     }
                 }
                 return aSort;
@@ -214,7 +214,10 @@ var jTable = {
         } else {
             //SET SORT
             var i;
-            if (elem.tagName.toLowerCase() === 'th') {
+            if (elem.tagName.toLowerCase() === 'th' || elem.tagName.toLowerCase() === 'td') {
+                if (setSort !== "up" && setSort !== "down" && setSort !== "") {
+                    throw new TypeError("setSort should be 'up', 'down', or ''");
+                }
                 if (setSort) {
                     setSort = [{cellIndex: elem.cellIndex, dir: setSort}];
                 } else {
@@ -222,26 +225,26 @@ var jTable = {
                 }
             }
             if (typeof setSort !== "object" || setSort.constructor !== Array) {
-                throw new TypeError ("setSort() expects an array parameter");
+                throw new TypeError("setSort() expects an array parameter");
             }
             for (i=0; i<setSort.length; i++) {
                 if (setSort[i].cellIndex === undefined || setSort[i].dir === undefined) {
-                    throw new TypeError ("setSort() expects cellIndex and dir for array item " + i);
+                    throw new TypeError("setSort() expects cellIndex and dir for array item " + i);
                 }
             }
     	    //this is a comb sort. O(n log n), but O(n) if already sorted
 	    //for now, just sort using first item in sort array
-	    var currentSort = tbl.tableSort();
+	    var currentSort = jTable.tableSort(tbl);
 	    var rows = tbl.tBodies[0].rows;
 	    //update sort attributes
 	    i = 0;
-	    while (tbl.headerCell(i)) {
-	        tbl.headerCell(i).removeAttribute("data-sort");
+	    while (jTable.tableHeaderCell(tbl, i)) {
+	        jTable.tableHeaderCell(tbl, i).removeAttribute("data-sort");
 	        i++;
 	    }
 	    var sortOrder = [];
 	    for (i=0; i < setSort.length; i++)  {
-	        tbl.headerCell(setSort[i].cellIndex).setAttribute("data-sort", setSort[i].dir);
+	        jTable.tableHeaderCell(tbl, setSort[i].cellIndex).setAttribute("data-sort", setSort[i].dir);
 	        sortOrder.push(setSort[i].cellIndex);
 	    }
 	    tbl.setAttribute("data-sortOrder", sortOrder.join(","));
@@ -272,10 +275,10 @@ var jTable = {
 	            swapped = false;
 	            //a single "comb" over the input list
 	            for (i=0; i + gap < rows.length; i++) for (var j=0; j<setSort.length; j++) {
-	                a = tbl.data(i, setSort[j].cellIndex);
-	                b = tbl.data(i + gap, setSort[j].cellIndex);
+	                a = jTable.tableData(tbl, i, setSort[j].cellIndex);
+	                b = jTable.tableData(tbl, i + gap, setSort[j].cellIndex);
 	                if (a !== b) {
-	                    if (dataTypes[tbl.dataType(setSort[j].cellIndex)].swap(a,b) ? setSort[j].dir === 'up' : setSort[j].dir === 'down') {
+	                    if (jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)].swap(a,b) ? setSort[j].dir === 'up' : setSort[j].dir === 'down') {
 	                        var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
 	   	                rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
 		     	        swapped = true;
@@ -287,7 +290,62 @@ var jTable = {
 	    }
 	    return elem;
         }
-    }
+    },
+    tableCellEditMode: function(elem, mode) {
+        if (elem.tagName.toLowerCase() === 'table') {
+            return undefined;
+        }
+        if (mode === undefined) {
+            //GET editmodel. returns boolean depending on contenteditable state
+            var divs = elem.getElementsByTagName("div");
+            for (var i=0; i < divs.length; i++) if (divs[i].contentEditable) {
+                return true;
+            }
+            return false;        
+        } else {
+            //sets the cell to contenteditable or not
+            var currentMode = jTable.tableCellEditMode(elem);
+            var div;
+            if (mode && !currentMode) {
+                div = document.createElement("div");
+                div.contentEditable = true;
+                while (elem.hasChildNodes()) {
+                    div.appendChild(elem.removeChild(elem.childNodes[0]));
+                }
+                elem.appendChild(div);
+                div.focus();
+                //warning: this could create duplicates
+                if (elem.id) {
+	            elem.setAttribute("old_id", elem.id);
+	        }
+                elem.id = "editCell";
+            } 
+            if (!mode && currentMode) {
+                //find the child div with contentEditable==true
+                for (var i=0; i < elem.childNodes.length; i++) {
+                    if (elem.childNodes[i].nodeType === 1 && elem.childNodes[i].nodeName.toLowerCase() === 'div' && elem.childNodes[i].contentEditable) {
+                        div = elem.childNodes[i];
+                        break;
+                    }            
+                }
+                div.removeAttribute("contentEditable");
+                while (div.hasChildNodes()) {
+                    elem.appendChild(div.removeChild(div.childNodes[0]));
+                }
+                elem.removeChild(div);
+                if (elem.getAttribute("old_id")) {
+                    elem.id = elem.getAttribute("old_id");
+                    elem.removeAttribute("old_id");
+                } else {
+                    elem.removeAttribute("id");
+                }
+                //re-calculate the dataType. should only need to do this if incompatible.
+                var head = jTable.tableHeaderCell(elem);
+                head.setAttribute("data-datatype", jTable.tableCalculateDataType(head));
+            }
+            return elem;
+        }
+    }   
 }
 jQuery.each(jTable, function(i) {
     var that = this;

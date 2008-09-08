@@ -4,19 +4,19 @@ var objColOptions = new function() {
     this.divColOptions = undefined;
     this.open = function(colH) {
 	//first, get the unique entries in the list into an array. then sort array.
-	colHead = jt(colH);
+	colHead = $(colH);
 	colTable = colHead.table();
 	divColOptions = document.getElementById('colOptions');
 	var divColOptionsFilter = document.getElementById('colOptionsFilter');
-	var filter = colHead.getFilter();
+	var filter = colHead.filter();
 	var uniqueColValues = colHead.getUniqueValues();	
 	//position box and create content
-	document.getElementsByName("sort")[0].checked = (colHead.getSort() == 'up');
-	document.getElementsByName("sort")[1].checked = (colHead.getSort() == 'down');
+	document.getElementsByName("sort")[0].checked = (colHead.sort() == 'up');
+	document.getElementsByName("sort")[1].checked = (colHead.sort() == 'down');
 	document.getElementById('chkDelete').checked = false;
-	divColOptions.style.left = colHead.offsetLeft + colHead.offsetWidth + colTable.offsetLeft + "px";
-	divColOptions.style.top = colHead.offsetTop + colTable.offsetTop + "px";
-	divColOptions.getElementsByTagName('h3')[0].innerHTML = colH.innerHTML;
+	divColOptions.style.left = colHead.offset().left + colHead.offset().width + "px";
+	divColOptions.style.top = colHead.offset().top + "px";
+	divColOptions.getElementsByTagName('h3')[0].innerHTML = colHead.html();
 	while (divColOptionsFilter.getElementsByTagName('span').length > 0)
 	    divColOptionsFilter.removeChild(divColOptionsFilter.getElementsByTagName('span')[0]);
 	var str = "";
@@ -50,18 +50,18 @@ var objColOptions = new function() {
 		filterArray.push(filterInputs[i].getAttribute("value"));
 	}
 	if (filterArray.length == filterInputs.length) {
-	    colHead.setFilter();
+	    colHead.filter(false);
 	} else {
-            colHead.setFilter(new RegExp("^" + filterArray.join("|") + "$"));
+            colHead.filter(new RegExp("^" + filterArray.join("|") + "$"));
         }
 	//sort
 	if (document.getElementById('sort_ascending').checked)
-	    colHead.setSort("up");
+	    colHead.sort("up");
 	if (document.getElementById('sort_descending').checked)
-	    colHead.setSort("down");
+	    colHead.sort("down");
 	//hide
 	if (document.getElementById('chkHide').checked) {
-	    colHead.setHide(true);
+	    colHead.hide(true);
 	}
 	//add Col
 	if (document.getElementById('addColLeft').checked) {
