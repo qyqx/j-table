@@ -1,18 +1,13 @@
-Welcome to j-table, the javascript library for manipulating HTML tables.
+Welcome to jTable, the javascript library for manipulating HTML tables. jTable is currently being re-written as a jQuery plugin. All methods are accessed using the standard jQuery() function, or its aliases such as $().
 
-==Global object==
-There is only one global object - jTable. jTable has only three members:
-  * t, representing a table
-  * h, representing a header cell (th) inside a thead row
-  * c, representing any cell in the table, either th or td
 
 ==Source files==
-There is only one file containing the library - jTable.js. All the other files are part of the testsuite, and can be run from testsuite.htm using the directory structure given.
+There is only one file containing the library - jquery.jtable.js. All the other files are part of the testsuite, and can be run from testsuite.htm using the directory structure given.
 
-The testsuite uses the Yahoo API to run through all the objects and their members. It also provides a simple demo table with a user interface for sorting, filtering, hiding columns, and editing or styling the table.
+The testsuite uses the jUnit module to run through all the functionality. It also provides a simple demo table with a user interface for sorting, filtering, hiding columns, and editing or styling the table.
 
-The rest of this document explains the jTable object contained within jTable.js. To include it in your website, copy the file and include it in your <head> section, e.g.
-{{{ <script src="jTable.js" type="text/javascript"></script>}}}
+The rest of this document explains the API for jTable. To include it in your website, copy the file and include it in your <head> section, e.g.
+{{{ <script src="jquery.jtable.js" type="text/javascript"></script>}}}
 
 ==Example table==
 Throughout this document, I will use the following example table: 
@@ -42,100 +37,72 @@ which displays like this:
 || *Country* || *Q1* || *Q2* || *Q3* || *Q4* ||
 || USA || 100 || 80 || 110 || 150 ||
 
-==jTable.t==
-[jTable_t jTable.t] is the object that allows you to manage the table. It returns a DOM table object enhanced with powerful additional members. 
+==General Observations==
+All jTable functions are called from the normal jQuery object and obey normal jQuery syntax. For example, jTable functions return arrays that can be chained and filtered, like any other jQuery function.
 
-[jTable_t jTable.t] takes one parameter, the table identifier. This can either be a string containing the table id, or the Table DOM object. In fact, it can also be the id or DOM object of any element inside the table, e.g. a td. If the id or DOM is not found, or does not refer to a table, then jTable.t() returns {{{undefined}}}.
+All jTable function names start with "table" - for example, {{{tableSort()}}}. That's so you can identify them quickly as part of this jQuery plugin.
 
-The following examples all return the same table:
-{{{
-var a = jTable.t('tbl');
-var b = jTable.t('tbl_thead');
-var c = jTable.t('tbl_tbody_tr0_3')
-var d = jTable.t(a);
-}}}
+jTable is targeted at three DOM elements in particuar: <table>, <th> and <td>. If you call jTable from any other DOM element - for example {{{$('img').tableSort()}}} - then jTable adopts the following rule:
+If the <img> is part of a <table>, <th> or <td> element, then it uses that element instead. If not, then the function returns {{{undefined}}}.
 
-[jTable_t jTable.t] has the following members:
-  * all the normal [http://developer.mozilla.org/en/docs/DOM:table DOM Table members], e.g. id and rows
-  * hCells
-  * getSort()
-  * setSort()
-  * dataType()
-  * getHide()
-  * setHide()
-  * getFilter()
-  * setFilter()
+==Table Traversal==
+jTable includes some utility functions for traversing the table.
 
-For example, to hide the first and second columns, use 
-{{{
-  jTable.t('tbl').setHide([0, 1]);
-}}}
-Or to sort the second column up, use
-{{{
-  jTable.t('tbl').setSort([{cellIndex: 1, dir: 'up'}]);
-}}}
-Or to find out an array of filters on the columns, use
-{{{
-  jTable.t('tbl').getFilter();
-}}}
+===table()===
+table() returns a jQuery object representing the parent HTML table element. 
 
-==jTable.h==
-[jTable_h jTable.h] is the object that allows you to manage a header of the table. It returns a DOM TH object enhanced with powerful additional members. 
+Using the example above, {{{$('tbl_tbody_tr0_0').table()}}} returns an array containing the parent HTML <table> element, i.e. {{{[$('#tbl')]}}}.
 
-[jTable_h jTable.h] takes one parameter, the header identifier. This can either be a string containing the header id, or the header DOM object. In fact, it can also be the id or DOM object of any element inside the header, e.g. an img. If the id or DOM is not found, or does not refer to a header, then jTable.h() returns {{{undefined}}}.
+Similarly, {{{$('#tbl').table() returns $('#tbl')}}}.
 
-The following examples return the same header cell:
-{{{
-var a = jTable.h('tbl_thead_th1');
-var b = jTable.h(a);
-}}}
+===tableCell()===
+tableCell() is intended to help you navigate to the correct cell in the table. It returns the jQuery DOM table cell element (<td> or <th>) at the given location. It takes up to two parameters.
 
-[jTable_h jTable.h] has the following members:
-  * all the normal [http://developer.mozilla.org/en/docs/DOM:table DOM Table cell members], e.g. id
-  * getSort()
-  * setSort()
-  * dataType()
-  * getHide()
-  * setHide()
-  * getFilter()
-  * setFilter()
-  * getUniqueValues()
+For tables, tableCell() takes two parameters representing the row and column of the cell. For table headers, tableCell() takes one parameter representing the row. For cells, tableCell() returns itself.
 
-For example, to hide the second column, use 
-{{{
-  jTable.h('tbl_thead_th1').setHide(true);
-}}}
-Or to sort the second column up, use
-{{{
-  jTable.h('tbl_thead_th1').setSort('up');
-}}}
-Or to filter for the string "Hello World" on the second column, use
-{{{
-  jTable.h('tbl_thead_th1').setFilter(/Hello World/);
-}}}
+For example:
 
-==jTable.c==
-[jTable_c jTable.c] is the object that allows you to manage a table cell. It returns a DOM TH or TD object enhanced with powerful additional members. 
+{{{$('#tbl').tableCell(0, 1)}}} returns the cell at the first row of the table body, in the second column, which is {{{$('#tbl_tbody_tr0_1')}}}.
 
-[jTable_c jTable.c] takes one parameter, the cell identifier. This can either be a string containing the cell id, or the cell DOM object. In fact, it can also be the id or DOM object of any element inside the cell, e.g. an img. If the id or DOM is not found, or does not refer to a cell, then jTable.c() returns {{{undefined}}}.
+{{{$('#tbl_thead_th1').tableCell(0)}}} returns the first cell in the relevant column (since tbl_thead_th1 is a header cell), which is {{{$('#tbl_tbody_tr0_1')}}}.
 
-The following examples return the same cell:
-{{{
-var a = jTable.c('tbl_tbody_tr0_1');
-var b = jTable.c(a);
-}}}
+{{{$('tbl_tbody_tr0_0').tableCell()}}} returns itself ({{{$('tbl_tbody_tr0_0')}}}), since tbl_tbody_tr0_0 is already a table cell.
 
-[jTable_c jTable.c] has the following members:
-  * all the normal [http://developer.mozilla.org/en/docs/DOM:table DOM Table cell members], e.g. id
-  * getEditMode()
-  * setEditMode()
-  * getTextContent()
+===tableData()===
+tableData() works exactly like tableCell(), except it returns the textContent (or innerText, depending on your browser) of the relevant cell. It takes the same two parameters as tableCell().
 
-For example, to open up the cell for rich text editing, use 
-{{{
-  jTable.c('tbl_tbody_tr0_1').setEditMode(true);
-}}}
-Or to get the cell text contents, use
-{{{
-  jTable.c('tbl_tbody_tr0_1').getTextContent();
-}}}
+For example:
+
+{{{$('#tbl').tableData(0, 1)}}} returns the cell contents at the first row of the table body, in the second column, which is {{{100}}}.
+
+{{{$('#tbl_thead_th1').tableCell(0)}}} returns the cell contents of the first cell in the relevant column (since tbl_thead_th1 is a header cell), which is {{{100}}}.
+
+{{{$('tbl_tbody_tr0_0').tableCell()}}} returns its text contents {{{100}}}, since tbl_tbody_tr0_0 is already a table cell.
+
+===tableHeaderCell()===
+tableHeaderCell() returns the relevant header cell - the <th> element at the top of the column in question. It takes up to one parameter.
+
+For tables, tableHeaderCell() takes a single parameter, representing the cellIndex of the relevant header cell.
+
+For table header cells, tableHeaderCell() takes no parameters, and returns itself.
+
+For cell data elements, tableHeaderCell() takes no parameters, and returns the table header cell at the top of its column.
+
+For example:
+
+{{{$('#tbl').tableHeaderCell(1)}}} returns the cell header at the second column, which is {{{$('#tbl_thead_th1')}}}.
+
+{{{$('#tbl_thead_th1').tableHeaderCell()}}} returns itself, since tbl_thead_th1 is already a header cell. which is {{{$('#tbl_thead_th1')}}}.
+
+{{{$('tbl_tbody_tr0_0').tableHeaderCell()}}} returns the cell header at the top of its columnm which is {{{$('#tbl_thead_th1')}}}.
+
+===tableHeaderData()===
+tableHeaderData() works exactly like tableHeaderCell, except it returns the textContent (or innerText, depending on your browser) of the relevant header cell.
+
+For example,
+
+{{{$('#tbl').tableHeaderData(1)}}} returns the cell contents at the first row of the table body, in the second column, which is {{{Q1}}}.
+
+{{{$('#tbl_thead_th1').tableHeaderData()}}} returns the cell contents of itself, which is {{{Q1}}}.
+
+{{{$('tbl_tbody_tr0_0').tableHeaderData()}}} returns the contents of the header cell in its column, which is {{{Q1}}}.
