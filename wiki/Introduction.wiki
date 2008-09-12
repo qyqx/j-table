@@ -106,3 +106,27 @@ For example,
 {{{$('#tbl_thead_th1').tableHeaderData()}}} returns the cell contents of itself, which is {{{Q1}}}.
 
 {{{$('tbl_tbody_tr0_0').tableHeaderData()}}} returns the contents of the header cell in its column, which is {{{Q1}}}.
+
+==Table Manipulation==
+
+===tableHide()===
+The tableHide() function can be used to hide a column, or to return its hidden state. It takes up to two parameters. The last parameter can be {{{true}}} or {{{false}}}, in which case the relevant column is hidden or unhidden. If the last parameter is left blank or set to {{{undefined}}}, then the function returns the hidden state.
+
+For tables, tableHide()'s first parameter represents the cellIndex of the column to hide. For cell headers and table cells, tableHide() does not take a first parameter.
+
+For example,
+
+{{{$('#tbl').tableHide(1)}}} returns an array of one boolean value, depending on whether the second column is hidden. In our case, it returns {{{[false]}}}.
+
+{{{$('#tbl').tableHide(1, true)}}} hides the second column in the table. It returns the table jQuery element.
+
+{{{$('#tbl_thead_th1').tableHide()}}} returns an array of one boolean value, depending on whether the relevant column is hidden. In our case, it returns {{{[false]}}}.
+
+{{{$('#tbl_thead_th1').tableHide(true)}}} hides the relevant column. It returns the relevant table header jQuery object.
+
+{{{$('tbl_tbody_tr0_0').tableHide()}}} returns an array of one boolean value, depending on whether the relevant column is hidden. In our case, it returns {{{[false]}}}.
+
+{{{$('tbl_tbody_tr0_0').tableHide(true)}}} hides the relevant column. It returns the relevant table cell jQuery object.
+
+===tableFilter()===
+The tableFilter() function gets and sets the relevant filter on the column. Filters are regular expressions that can be used to hide particular rows of the table.
