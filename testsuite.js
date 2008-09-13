@@ -203,7 +203,7 @@ test("editMode.table", function () {
     var myError = "";
     try {
         myError = false;
-        table.editMode(true);
+        table.tableCellEditMode("hello");
     } catch (e) {
         myError = true;
     }
