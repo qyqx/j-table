@@ -1,77 +1,81 @@
-var objColOptions = new function() {
-    this.colHead = undefined;
-    this.colTable = undefined;
-    this.divColOptions = undefined;
-    this.open = function(colH) {
+var colOptions = {
+    colHead: undefined,
+    divColOptions: jQuery('#colOptions'),
+    open: function(colHead) {
 	//first, get the unique entries in the list into an array. then sort array.
-	colHead = $(colH);
-	colTable = colHead.table();
-	divColOptions = document.getElementById('colOptions');
+	colOptions.colHead = colHead;
 	var divColOptionsFilter = document.getElementById('colOptionsFilter');
-	var filter = colHead.filter();
-	var uniqueColValues = colHead.getUniqueValues();	
+	var filter = colHead.tableFilter();
+	var uniqueColValues = [];
+        var cellIndex = colHead.attr("cellIndex");
+        var cloneHeaderCell = colHead.table().clone().tableSort([{cellIndex: cellIndex, dir: 'up'}]).tableHeaderCell(cellIndex);
+        var i = 0;
+        while (cloneHeaderCell.tableData(i)) {
+            if (i===0 || cloneHeaderCell.tableData(i) !== cloneHeaderCell.tableData(i - 1)) {
+                uniqueColValues.push(cloneHeaderCell.tableData(i));    
+            }
+            i++;
+        }
 	//position box and create content
-	document.getElementsByName("sort")[0].checked = (colHead.sort() == 'up');
-	document.getElementsByName("sort")[1].checked = (colHead.sort() == 'down');
-	document.getElementById('chkDelete').checked = false;
-	divColOptions.style.left = colHead.offset().left + colHead.offset().width + "px";
-	divColOptions.style.top = colHead.offset().top + "px";
-	divColOptions.getElementsByTagName('h3')[0].innerHTML = colHead.html();
-	while (divColOptionsFilter.getElementsByTagName('span').length > 0)
-	    divColOptionsFilter.removeChild(divColOptionsFilter.getElementsByTagName('span')[0]);
+	colOptions.divColOptions.find("input[name='sort']:first").attr("checked", colHead.tableSort() == 'up');
+	colOptions.divColOptions.find("input[name='sort']:last").attr("checked", colHead.tableSort() == 'down');
+	//document.getElementsByName("sort")[0].checked = (colHead.tableSort() == 'up');
+	//document.getElementsByName("sort")[1].checked = (colHead.tableSort() == 'down');
+	colOptions.divColOptions.filter('#chkDelete').attr("checked", "false");
+	colOptions.divColOptions.css({left: colHead.outerWidth() + "px", top: colHead.offset().top + "px"})
+	colOptions.divColOptions.html(colHead.html());
+	colOptions.divColOptions.remove("span");
 	var str = "";
 	for (var i=0; i<uniqueColValues.length; i++) {
 	    str = "<span class='divOption'><input type='checkbox' name='chkname" + i + "' ";
 	    str += "id='chkid" + i + "' value='" + uniqueColValues[i] + "' ";
-	    if (filter == undefined || filter.test(uniqueColValues[i])) {
+	    if (!filter || (filter instanceof RegExp && filter.test(uniqueColValues[i]))) {
 	 	str += "checked";
 	    }
             str += "></input><label for='chkid" + i + "'>" + uniqueColValues[i] + "</label></span>";
-            divColOptionsFilter.innerHTML += str;
 	}
-	divColOptions.style.display = "block";
-    }
-    this.close = function() {
-	divColOptions.style.display = "none";
-	this.colHead = undefined;
-	this.colTable = undefined;
-    }
-    this.chkAllNone = function(all) {
-	var i = 0;
-	while (document.getElementById('chkid' + i))
-  	    document.getElementById('chkid' + i++).checked = all;
-    }
-    this.submit = function() {
+	colOptions.divColOptions.find('#colOptionsFilter').html(str);
+	colOptions.divColOptions.css("display", "block");
+    },
+    close: function() {
+	colOptions.divColOptions.css("display", "none");
+	colOptions.colHead = undefined;
+    },
+    chkAllNone: function(all) {
+        colOptions.divColOptions.find("span.divOption input").attr("checked", all);
+    },
+    submit: function() {
 	//filter
-	var filterInputs = document.getElementById('colOptionsFilter').getElementsByTagName('input');
+	var filterInputs = colOptions.divColOption.find("#colOptionsFilter input");
 	var filterArray = [];
 	for (var i=0; i<filterInputs.length; i++) {
-	    if (filterInputs[i].checked)
-		filterArray.push(filterInputs[i].getAttribute("value"));
+	    if (filterInputs[i].attr("checked")) {
+		filterArray.push(filterInputs[i].attr("value"));
+	    }
 	}
 	if (filterArray.length == filterInputs.length) {
-	    colHead.filter(false);
+	    colOptions.colHead.filter(false);
 	} else {
-            colHead.filter(new RegExp("^" + filterArray.join("|") + "$"));
+            colOptions.colHead.filter(new RegExp("^" + filterArray.join("|") + "$"));
         }
 	//sort
 	if (document.getElementById('sort_ascending').checked)
-	    colHead.sort("up");
+	    colOptions.colHead.tableSort("up");
 	if (document.getElementById('sort_descending').checked)
-	    colHead.sort("down");
+	    colOptions.colHead.tableSort("down");
 	//hide
 	if (document.getElementById('chkHide').checked) {
-	    colHead.hide(true);
+	    colOptions.colHead.tableHide(true);
 	}
 	//add Col
 	if (document.getElementById('addColLeft').checked) {
-	    colHead.addColumn(false);
+	    colOptions.colHead.tableAddColumn(false);
 	}
 	if (document.getElementById('addColRight').checked) {
-	    colHead.addColumn(true);
+	    colOptions.colHead.tableAddColumn(true);
 	}
 	if (document.getElementById('chkDelete').checked) {
-	    colHead.deleteColumn();
+	    colOptions.colHead.tableDeleteColumn();
 	}
 	document.getElementById('colOptions').style.display = 'none';
 	document.getElementById("chkHide").checked = false;
@@ -170,37 +174,32 @@ var menu = new function() {
 }
 function mDown(e) {
     var e = e ? e : window.event;
-    var elem = jt(e.target ? e.target : e.srcElement);
-    if (!elem) {
+    var elem = $(e.target ? e.target : e.srcElement);
+    if (!elem.table()) {
         return false;
     }
-    var tblOffsetLeft = 0;
-    var tempTbl = elem;
-    while (tempTbl && !isNaN(tempTbl.offsetLeft)) {
-        tblOffsetLeft += tempTbl.offsetLeft;
-        tempTbl = tempTbl.parentNode
-    }
+    var tableOffsetLeft = elem.table().offset().left;
     //remove all editCells;
-    while (jt('editCell')) {
-        jt('editCell').setEditMode(false);
-    }
+    $('#editCell').tableCellEditMode(false);
     //is it the sort/filter option in the header cell?
-    if (/^td|th$/.test(elem.tagName.toLowerCase())) {
-        if (e.clientX > (tblOffsetLeft + elem.offsetWidth - 10)) {
-            objColOptions.open(elem);
+    //if (/^td|th$/.test(elem.tagName.toLowerCase())) {
+    if (elem.is("td, th")) {
+        if (e.clientX > (elem.offset().left + elem.outerWidth() - 10)) {
+            colOptions.open(elem);
 	    return;
-	} else if (e.clientX > (tblOffsetLeft + elem.offsetWidth - 20) && e.clientX < (tblOffsetLeft + elem.offsetWidth - 10)) {
+	}
+	if (e.clientX > (elem.offset().left + elem.outerWidth() - 20)) {
    	    if (e.ctrlKey) {
-   	        if (!elem.table().getSort()) {
-   	            elem.table().setSort(elem.table().getSort().concat([{cellIndex: elem.cellIndex, 'dir': 'up'}]));
+   	        if (!elem.table().tableSort()) {
+   	            elem.table().tableSort(elem.table().tableSort()[0].concat([{cellIndex: elem.cellIndex, 'dir': 'up'}]));
    	        }
    	    } else {
-   	        elem.setSort(elem.getSort() == 'up' ? 'down' : 'up');
+   	        elem.tableSort(elem.tableSort() == 'up' ? 'down' : 'up');
    	    }
    	    return;
    	}
-   	elem.setEditMode(true);
-	elem.getElementsByTagName("div")[0].focus();
+   	elem.tableCellEditMode(true);
+	elem.get()[0].getElementsByTagName("div")[0].focus();
     }
     //is it the table transform dialog box?
     if ((e.target ? e.target : e.srcElement).tagName.toLowerCase() == 'caption' && e.clientX > (elem.offsetLeft + elem.offsetWidth  - 20)) {

@@ -30,7 +30,7 @@ jQuery.tableDataTypes = {
 var jTable = {
     tableCell: function(elem, row, col) {
         //returns the <td> at the relevant row and column
-        if (elem.parentNode !== undefined && elem.parentNode.parentNode.tagName.toLowerCase() === "tbody") {
+        if (elem.parentNode && elem.parentNode.parentNode.tagName.toLowerCase() === "tbody") {
             return elem;
         } else {
             return jTable.table(elem).tBodies[0].rows[row] && 
@@ -306,6 +306,9 @@ var jTable = {
             //sets the cell to contenteditable or not
             var currentMode = jTable.tableCellEditMode(elem);
             var div;
+            if (mode !== true && mode !== false) {
+                throw new TypeError("CellEditMode passed non-boolean value");
+            }
             if (mode && !currentMode) {
                 div = document.createElement("div");
                 div.contentEditable = true;
@@ -373,7 +376,7 @@ jQuery.each(jTable, function(i) {
         if (answer.length === 0) {
             return undefined;
         }
-        if (answer[0].style) { //crude test: is it a DOM object
+        if (answer[0] && answer[0].style) { //crude test: is it a DOM object
             return jQuery(answer);
         } else {
             return answer;
