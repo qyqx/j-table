@@ -1,118 +1,128 @@
 var colOptions = {
     colHead: undefined,
-    divColOptions: jQuery('#colOptions'),
+    div: $('#colOptions'),
     open: function(colHead) {
 	//first, get the unique entries in the list into an array. then sort array.
-	colOptions.colHead = colHead;
-	var divColOptionsFilter = document.getElementById('colOptionsFilter');
-	var filter = colHead.tableFilter();
+	this.colHead = colHead;
+	var filter = colHead.tableFilter()[0];
 	var uniqueColValues = [];
         var cellIndex = colHead.attr("cellIndex");
-        var cloneHeaderCell = colHead.table().clone().tableSort([{cellIndex: cellIndex, dir: 'up'}]).tableHeaderCell(cellIndex);
+        var cloneHeader = colHead.table().clone().tableSort([{cellIndex: cellIndex, dir: 'up'}]).tableHeaderCell(cellIndex);
         var i = 0;
-        while (cloneHeaderCell.tableData(i)) {
-            if (i===0 || cloneHeaderCell.tableData(i) !== cloneHeaderCell.tableData(i - 1)) {
-                uniqueColValues.push(cloneHeaderCell.tableData(i));    
+        while (cloneHeader.tableData(i)) {
+            if (i===0 || cloneHeader.tableData(i)[0] !== cloneHeader.tableData(i - 1)[0]) {
+                uniqueColValues.push(cloneHeader.tableData(i));    
             }
             i++;
         }
-	//position box and create content
-	colOptions.divColOptions.find("input[name='sort']:first").attr("checked", colHead.tableSort() == 'up');
-	colOptions.divColOptions.find("input[name='sort']:last").attr("checked", colHead.tableSort() == 'down');
-	//document.getElementsByName("sort")[0].checked = (colHead.tableSort() == 'up');
-	//document.getElementsByName("sort")[1].checked = (colHead.tableSort() == 'down');
-	colOptions.divColOptions.filter('#chkDelete').attr("checked", "false");
-	colOptions.divColOptions.css({left: colHead.outerWidth() + "px", top: colHead.offset().top + "px"})
-	colOptions.divColOptions.html(colHead.html());
-	colOptions.divColOptions.remove("span");
-	var str = "";
+        //position box and create content
+        this.div.find("input[name='sort']:first").attr("checked", colHead.tableSort() == 'up');
+	this.div.find("input[name='sort']:last").attr("checked", colHead.tableSort() == 'down');
+	this.div.find('#chkDelete').removeAttr("checked");
+	this.div.find('#chkHide').removeAttr("checked");
+	this.div.find('h3').html(colHead.html());
+	this.div.find('#colOptionsFilter span').remove();
+	var str = this.div.find('#colOptionsFilter').html();
 	for (var i=0; i<uniqueColValues.length; i++) {
-	    str = "<span class='divOption'><input type='checkbox' name='chkname" + i + "' ";
+	    str += "<span class='divOption'><input type='checkbox' name='chkname" + i + "' ";
 	    str += "id='chkid" + i + "' value='" + uniqueColValues[i] + "' ";
 	    if (!filter || (filter instanceof RegExp && filter.test(uniqueColValues[i]))) {
 	 	str += "checked";
 	    }
             str += "></input><label for='chkid" + i + "'>" + uniqueColValues[i] + "</label></span>";
 	}
-	colOptions.divColOptions.find('#colOptionsFilter').html(str);
-	colOptions.divColOptions.css("display", "block");
+	this.div.find('#colOptionsFilter').html(str);
+	this.div.css({
+	    left: colHead.offset().left + colHead.outerWidth() + "px", 
+	    top: colHead.offset().top + "px", 
+	    display: "block"
+	});
     },
     close: function() {
-	colOptions.divColOptions.css("display", "none");
-	colOptions.colHead = undefined;
+	this.div.css("display", "none");
+	this.colHead = undefined;
     },
     chkAllNone: function(all) {
-        colOptions.divColOptions.find("span.divOption input").attr("checked", all);
+        this.div.find("#colOptionsFilter span.divOption input").attr("checked", all);
     },
     submit: function() {
 	//filter
-	var filterInputs = colOptions.divColOption.find("#colOptionsFilter input");
+	var filterInputs = this.div.find("#colOptionsFilter input");
 	var filterArray = [];
 	for (var i=0; i<filterInputs.length; i++) {
-	    if (filterInputs[i].attr("checked")) {
-		filterArray.push(filterInputs[i].attr("value"));
+	    if (filterInputs.eq(i).attr("checked")) {
+		filterArray.push(filterInputs.eq(i).attr("value"));
 	    }
 	}
 	if (filterArray.length == filterInputs.length) {
-	    colOptions.colHead.filter(false);
+	    this.colHead.tableFilter(false);
 	} else {
-            colOptions.colHead.filter(new RegExp("^" + filterArray.join("|") + "$"));
+            this.colHead.tableFilter(new RegExp("^" + filterArray.join("|") + "$"));
         }
 	//sort
-	if (document.getElementById('sort_ascending').checked)
-	    colOptions.colHead.tableSort("up");
-	if (document.getElementById('sort_descending').checked)
-	    colOptions.colHead.tableSort("down");
+	if (this.div.find('#sort_ascending').attr("checked"))
+	    this.colHead.tableSort("up");
+	if (this.div.find('#sort_descending').attr("checked"))
+	    this.colHead.tableSort("down");
 	//hide
-	if (document.getElementById('chkHide').checked) {
-	    colOptions.colHead.tableHide(true);
+	if (this.div.find('#chkHide').attr("checked")) {
+	    this.colHead.tableHide(true);
 	}
 	//add Col
-	if (document.getElementById('addColLeft').checked) {
-	    colOptions.colHead.tableAddColumn(false);
+	if (this.div.find('#addColLeft').attr("checked")) {
+	    this.colHead.tableAddColumn(false);
 	}
-	if (document.getElementById('addColRight').checked) {
-	    colOptions.colHead.tableAddColumn(true);
+	if (this.div.find('#addColRight').attr("checked")) {
+	    this.colHead.tableAddColumn(true);
 	}
-	if (document.getElementById('chkDelete').checked) {
-	    colOptions.colHead.tableDeleteColumn();
+	if (this.div.find('#chkDelete').attr("checked")) {
+	    this.colHead.tableDeleteColumn();
 	}
-	document.getElementById('colOptions').style.display = 'none';
-	document.getElementById("chkHide").checked = false;
+	this.div.find('#chkHide').attr("checked", "false");
+	this.close();
     }
 }
 
-var tableTransform = new function() {
-    this.table = undefined;
-    this.open = function(tbl) {
- 	table = jt(tbl).table();
-	var divTableTransform = document.getElementById("tableTransform");
+var tableTransform = {
+    table: undefined,
+    div: $('#tableTransform'),
+    open: function(elem) {
+ 	this.table = elem.table();
 	// unhide
 	var strUnhide = "";
-	tblHide = table.getHide();
+	tblHide = this.table.tableHide();
 	var col = 0;
 	var i = 0;
-	while (table.headerCell(col)) {
-	    if (table.headerCell(col).getHide()) {
+	this.table.find("thead th").each(function (i) {
+	    if (jTable.tableHide(this)) {
 	        strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + col + '">';
-	        strUnhide += '<label for="chkHide' + i + '">' + table.headerData(col) + '</label></span>';
-	        i++;
+		strUnhide += '<label for="chkHide' + i + '">' + table.headerData(col) + '</label></span>';
 	    }
-	    col++;
-	}
-	if (i === 0) {
+	});
+	
+	//while (table.headerCell(col)) {
+	//    if (table.headerCell(col).getHide()) {
+	//        strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + col + '">';
+	//        strUnhide += '<label for="chkHide' + i + '">' + table.headerData(col) + '</label></span>';
+	//        i++;
+	//    }
+	//    col++;
+	//}
+	if (strUnhide === '') {
 	    strUnhide = '<span class="divOption"><input type="checkbox" id="chk_nonehidden" disabled><label for="chk_nonehidden">No columns hidden</label></span>';
 	}
-	document.getElementById('tableTransformUnhide').innerHTML = "<h4>Unhide:</h4> " + strUnhide;
-	divTableTransform.style.left = tbl.offsetLeft + tbl.offsetWidth + "px";
-	divTableTransform.style.top = tbl.offsetTop + "px";
-	divTableTransform.style.display = "block";	
-    }
-    this.close = function() {
-	document.getElementById("tableTransform").style.display = "none";
-	table = undefined;
-    }
-    this.submit = function() {
+	this.div.find('#tableTransformUnhide').html("<h4>Unhide:</h4> " + strUnhide);
+	this.div.css({
+	    left: this.table.offset().left + this.table.outerWidth() + "px",
+	    top: this.table.offset().top + "px",
+	    display: "block"
+	});
+    },
+    close: function() {
+	this.table.css("dispay", "none");
+	this.table = undefined;
+    },
+    submit: function() {
 	//unhide
 	var chkHide = document.getElementsByName("chkUnhide");
 	for (var i=0; i<chkHide.length; i++) if (chkHide[i].checked) {
@@ -200,9 +210,10 @@ function mDown(e) {
    	}
    	elem.tableCellEditMode(true);
 	elem.get()[0].getElementsByTagName("div")[0].focus();
+	return;
     }
     //is it the table transform dialog box?
-    if ((e.target ? e.target : e.srcElement).tagName.toLowerCase() == 'caption' && e.clientX > (elem.offsetLeft + elem.offsetWidth  - 20)) {
+    if ((e.target ? e.target : e.srcElement).tagName.toLowerCase() === 'caption' && e.clientX > (elem.offset().left + elem.outerWidth()  - 20)) {
 	tableTransform.open(elem);
 	return;
     }
