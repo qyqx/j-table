@@ -348,7 +348,45 @@ var jTable = {
             }
             return elem;
         }
-    }   
+    },
+    tableAddColumn: function(elem) {
+        //adds col to the left if dir===false, right if dir===true. table.addColumn has extra cellIndex argument
+        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
+        var dir = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
+        if (typeof dir !== 'boolean') {
+            throw new TypeError("must pass boolean to tableAddColumn");
+        }
+        var th = document.createElement("th");
+        var td = document.createElement("td");
+        var dataCell;
+        var i = 0;
+        while (true) {
+            dataCell = jTable.tableCell(colHead, i);
+            if (!dataCell) {
+                break;
+            }
+            dataCell.parentNode.insertBefore(td.cloneNode(false), dir ? dataCell.nextSibling : dataCell);
+            i++;
+        }
+        colHead.parentNode.insertBefore(th, dir ? colHead.nextSibling : colHead);
+        return elem;
+    },
+    tableRemoveColumn: function(elem) {
+        //deletes the relevant column. table.deleteColumn has cellIndex argument
+        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
+        var i = 0;
+        var cell;
+        while (true) {
+            cell = jTable.tableCell(colHead, i)
+            if (!cell) {
+                break;
+            }
+            cell.parentNode.removeChild(cell);
+            i++;
+        }
+        colHead.parentNode.removeChild(colHead);
+        return elem;
+    }
 }
 jQuery.each(jTable, function(i) {
     var that = this;

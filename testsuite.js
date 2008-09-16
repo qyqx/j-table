@@ -200,17 +200,17 @@ test("sort.cell", function() {
 test("editMode.table", function () {
     var table = $('#testTable');
     ok(table.tableCellEditMode() === undefined, "table.tableCellEditMode() should return undefined");
-    var myError = "";
-    try {
-        myError = false;
-        table.tableCellEditMode("hello");
-    } catch (e) {
-        myError = true;
-    }
-    ok(myError, "table.editMode(x) should throw error")
 });
 test("editMode.header", function () {
     var cell = $('#testColHeader');
+    var myError = "";
+    try {
+        myError = false;
+        cell.tableCellEditMode("hello");
+    } catch (e) {
+        myError = true;
+    }
+    ok(myError, "table.editMode(x) should throw error");
     ok(cell.tableCellEditMode()[0] === false, "editMode() should return false");
     cell.tableCellEditMode(true);
     ok(cell.tableCellEditMode()[0], "editMode() should return true");
@@ -220,10 +220,44 @@ test("editMode.header", function () {
 });
 test("editMode.cell", function () {
     var cell = $('#testCell1');
+    try {
+        myError = false;
+        cell.tableCellEditMode("hello");
+    } catch (e) {
+        myError = true;
+    }
+    ok(myError, "table.editMode(x) should throw error");    
     ok(cell.tableCellEditMode()[0] === false, "editMode() should return false");
     cell.tableCellEditMode(true);
     ok(cell.tableCellEditMode()[0], "editMode() should return true");
     equals(cell.get()[0].getElementsByTagName("div").length, 1, "editMode() did not make a cell editable");
     cell.tableCellEditMode(false);
     equals(cell.tableCellEditMode()[0], false, "editMode() should return back to false");
+});
+test("addRemoveColumn.table", function() {
+    var table = $('#testTable');
+    table.tableAddColumn(1, false);
+    table.tableAddColumn(2, true)
+    equals($('#testColHeader').get()[0].parentNode.cells.length, 7, "jt.tableAddColumn didn't increment the header count");
+    table.tableRemoveColumn(1);
+    table.tableRemoveColumn(2);
+    equals($('#testColHeader').get()[0].parentNode.cells.length, 5, "jt.tableRemoveColumn didn't decrement the header count");
+});
+test("addRemoveColumn.header", function() {
+    var header = $('#testColHeader');
+    header.tableAddColumn(false);
+    header.tableAddColumn(true)
+    equals(header.get()[0].parentNode.cells.length, 7, "jt.tableAddColumn didn't increment the header count");
+    header.next().tableRemoveColumn();
+    header.prev().tableRemoveColumn();
+    equals(header.get()[0].parentNode.cells.length, 5, "jt.tableRemoveColumn didn't decrement the header count");
+});
+test("addRemoveColumn.cell", function() {
+    var cell = $('#testCell1');
+    cell.tableAddColumn(false);
+    cell.tableAddColumn(true)
+    equals(cell.get()[0].parentNode.cells.length, 7, "jt.tableAddColumn didn't increment the header count");
+    cell.next().tableRemoveColumn();
+    cell.prev().tableRemoveColumn();
+    equals(cell.get()[0].parentNode.cells.length, 5, "jt.tableRemoveColumn didn't decrement the header count");
 });

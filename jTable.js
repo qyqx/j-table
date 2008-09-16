@@ -16,10 +16,9 @@ var colOptions = {
             i++;
         }
         //position box and create content
+        this.div.find('input').removeAttr("checked");
         this.div.find("input[name='sort']:first").attr("checked", colHead.tableSort() == 'up');
 	this.div.find("input[name='sort']:last").attr("checked", colHead.tableSort() == 'down');
-	this.div.find('#chkDelete').removeAttr("checked");
-	this.div.find('#chkHide').removeAttr("checked");
 	this.div.find('h3').html(colHead.html());
 	this.div.find('#colOptionsFilter span').remove();
 	var str = this.div.find('#colOptionsFilter').html();
@@ -76,12 +75,12 @@ var colOptions = {
 	    this.colHead.tableAddColumn(true);
 	}
 	if (this.div.find('#chkDelete').attr("checked")) {
-	    this.colHead.tableDeleteColumn();
+	    this.colHead.tableRemoveColumn();
 	}
 	this.div.find('#chkHide').attr("checked", "false");
 	this.close();
     }
-}
+};
 
 var tableTransform = {
     table: undefined,
@@ -90,24 +89,12 @@ var tableTransform = {
  	this.table = elem.table();
 	// unhide
 	var strUnhide = "";
-	tblHide = this.table.tableHide();
-	var col = 0;
-	var i = 0;
 	this.table.find("thead th").each(function (i) {
 	    if (jTable.tableHide(this)) {
-	        strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + col + '">';
-		strUnhide += '<label for="chkHide' + i + '">' + table.headerData(col) + '</label></span>';
+	        strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + i + '">';
+		strUnhide += '<label for="chkHide' + i + '">' + $(this).text() + '</label></span>';
 	    }
 	});
-	
-	//while (table.headerCell(col)) {
-	//    if (table.headerCell(col).getHide()) {
-	//        strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + col + '">';
-	//        strUnhide += '<label for="chkHide' + i + '">' + table.headerData(col) + '</label></span>';
-	//        i++;
-	//    }
-	//    col++;
-	//}
 	if (strUnhide === '') {
 	    strUnhide = '<span class="divOption"><input type="checkbox" id="chk_nonehidden" disabled><label for="chk_nonehidden">No columns hidden</label></span>';
 	}
@@ -119,18 +106,18 @@ var tableTransform = {
 	});
     },
     close: function() {
-	this.table.css("dispay", "none");
+	this.div.css("display", "none");
 	this.table = undefined;
     },
     submit: function() {
 	//unhide
-	var chkHide = document.getElementsByName("chkUnhide");
-	for (var i=0; i<chkHide.length; i++) if (chkHide[i].checked) {
-	    table.setHide(false, chkHide[i].value);
-	}
+	var table = this.table;
+	this.div.find("input[name='chkUnhide'][checked]").each(function (i) {
+	    table.tableHide(this.value, false);
+	});
 	this.close();
     }
-}
+};
 
 function getRange() {
 	var userSelection;
@@ -148,8 +135,8 @@ function getRange() {
 		return range;
 	}
 }
-var menu = new function() {
-    this.clickTab = function(tab) {
+var menu = {
+    clickTab: function(tab) {
         var tabHeaders = document.getElementById('tabHeaders').getElementsByTagName('li');
 	for (var i=0; i<tabHeaders.length; i++) {
 	    if (tabHeaders[i].innerHTML.indexOf(tab) > -1)
@@ -164,16 +151,16 @@ var menu = new function() {
 	    else
 		tabContents[i].className = '';
 	}
-    }
-    this.refresh = function(tbl) {
+    },
+    refresh: function(tbl) {
     // display as
 	var rad = document.getElementById('display_as');
 	for (var i=0; i<rad.length; i++) {
 	    if (rad[i].value == tbl.getAttribute("viewAs"))
 		rad[i].checked = true;
 	}
-    }
-    this.style = function(cmd, str) {
+    },
+    style: function(cmd, str) {
 	if (document.queryCommandEnabled) {
 	    try {document.execCommand(cmd, null, str);}
 	    catch (err) {alert("cmd" + ", " + str + ", " + err.message);}
@@ -181,7 +168,7 @@ var menu = new function() {
 	    alert("no text selected");
 	}
     }
-}
+};
 function mDown(e) {
     var e = e ? e : window.event;
     var elem = $(e.target ? e.target : e.srcElement);
@@ -192,7 +179,6 @@ function mDown(e) {
     //remove all editCells;
     $('#editCell').tableCellEditMode(false);
     //is it the sort/filter option in the header cell?
-    //if (/^td|th$/.test(elem.tagName.toLowerCase())) {
     if (elem.is("td, th")) {
         if (e.clientX > (elem.offset().left + elem.outerWidth() - 10)) {
             colOptions.open(elem);
@@ -213,7 +199,7 @@ function mDown(e) {
 	return;
     }
     //is it the table transform dialog box?
-    if ((e.target ? e.target : e.srcElement).tagName.toLowerCase() === 'caption' && e.clientX > (elem.offset().left + elem.outerWidth()  - 20)) {
+    if ((e.target ? e.target : e.srcElement).tagName.toLowerCase() === 'caption' && e.clientX > (elem.offset().left + elem.outerWidth()  - 30)) {
 	tableTransform.open(elem);
 	return;
     }
