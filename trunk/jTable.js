@@ -4,14 +4,14 @@ var colOptions = {
     open: function(colHead) {
 	//first, get the unique entries in the list into an array. then sort array.
 	this.colHead = colHead;
-	var filter = colHead.tableFilter()[0];
+	var filter = colHead.columnFilter()[0];
 	var uniqueColValues = [];
         var cellIndex = colHead.attr("cellIndex");
-        var cloneHeader = colHead.table().clone().tableSort([{cellIndex: cellIndex, dir: 'up'}]).tableHeaderCell(cellIndex);
+        var cloneHeader = colHead.table().clone().tableSort([{cellIndex: cellIndex, dir: 'up'}]).column(cellIndex);
         var i = 0;
-        while (cloneHeader.tableData(i)) {
-            if (i===0 || cloneHeader.tableData(i)[0] !== cloneHeader.tableData(i - 1)[0]) {
-                uniqueColValues.push(cloneHeader.tableData(i));    
+        while (cloneHeader.cell(i)) {
+            if (i===0 || cloneHeader.cell(i).text() !== cloneHeader.cell(i - 1).text()) {
+                uniqueColValues.push(cloneHeader.cell(i).text());    
             }
             i++;
         }
@@ -54,9 +54,9 @@ var colOptions = {
 	    }
 	}
 	if (filterArray.length == filterInputs.length) {
-	    this.colHead.tableFilter(false);
+	    this.colHead.columnFilter(false);
 	} else {
-            this.colHead.tableFilter(new RegExp("^" + filterArray.join("|") + "$"));
+            this.colHead.columnFilter(new RegExp("^" + filterArray.join("|") + "$"));
         }
 	//sort
 	if (this.div.find('#sort_ascending').attr("checked"))
@@ -65,17 +65,17 @@ var colOptions = {
 	    this.colHead.tableSort("down");
 	//hide
 	if (this.div.find('#chkHide').attr("checked")) {
-	    this.colHead.tableHide(true);
+	    this.colHead.columnHide(true);
 	}
 	//add Col
 	if (this.div.find('#addColLeft').attr("checked")) {
-	    this.colHead.tableAddColumn(false);
+	    this.colHead.columnAdd(false);
 	}
 	if (this.div.find('#addColRight').attr("checked")) {
-	    this.colHead.tableAddColumn(true);
+	    this.colHead.columnAdd(true);
 	}
 	if (this.div.find('#chkDelete').attr("checked")) {
-	    this.colHead.tableRemoveColumn();
+	    this.colHead.columnRemove();
 	}
 	this.div.find('#chkHide').attr("checked", "false");
 	this.close();
@@ -90,7 +90,7 @@ var tableTransform = {
 	// unhide
 	var strUnhide = "";
 	this.table.find("thead th").each(function (i) {
-	    if (jTable.tableHide(this)) {
+	    if (jTable.columnHide(this)) {
 	        strUnhide += '<span class="divOption"><input type="checkbox" name="chkUnhide" id="chkHide' + i + '" value="' + i + '">';
 		strUnhide += '<label for="chkHide' + i + '">' + $(this).text() + '</label></span>';
 	    }
@@ -113,7 +113,7 @@ var tableTransform = {
 	//unhide
 	var table = this.table;
 	this.div.find("input[name='chkUnhide'][checked]").each(function (i) {
-	    table.tableHide(this.value, false);
+	    table.columnHide(this.value, false);
 	});
 	this.close();
     }
@@ -177,7 +177,7 @@ function mDown(e) {
     }
     var tableOffsetLeft = elem.table().offset().left;
     //remove all editCells;
-    $('#editCell').tableCellEditMode(false);
+    $('#editCell').cellEditMode(false);
     //is it the sort/filter option in the header cell?
     if (elem.is("td, th")) {
         if (e.clientX > (elem.offset().left + elem.outerWidth() - 10)) {
@@ -194,7 +194,7 @@ function mDown(e) {
    	    }
    	    return;
    	}
-   	elem.tableCellEditMode(true);
+   	elem.cellEditMode(true);
 	elem.get()[0].getElementsByTagName("div")[0].focus();
 	return;
     }
