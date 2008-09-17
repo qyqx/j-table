@@ -3,13 +3,13 @@ jQuery.tableDataTypes = {
     number: {
         re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
         swap: function(a,b) {
-            return Number(a) > Number(b);
+            return Number(a) - Number(b);
         }
     },
     currency: {
         re: /^-?\d+(?:\.\d*)?$/i,
         swap: function(a,b) {
-            return Number(a) > Number(b);
+            return Number(a) - Number(b);
         }
     },
     date: {
@@ -18,50 +18,47 @@ jQuery.tableDataTypes = {
             return scratch.toString() !== 'NaN' && scratch.toString() !== 'Invalid Date';
         },
         swap: function(a,b) {
-            return Date.parse(a) > Date.parse(b);
+            return Date.parse(a) - Date.parse(b);
         }
     },
     string: {
         swap: function(a,b) {
-            return a > b;
+            return a - b;
         }
     }
 };
 var jTable = {
-    tableCell: function(elem, row, col) {
+    cell: function(elem, row, col) {
         //returns the <td> at the relevant row and column
+        if (elem.tagName.toLowerCase() === "table") {
+            if (row === undefined || col === undefined) {
+                throw new TypeError("table.cell requires row and column parameters");
+            }
+            return elem.tBodies[0].rows[row] && elem.tBodies[0].rows[row].cells[col];
+        }
         if (elem.parentNode && elem.parentNode.parentNode.tagName.toLowerCase() === "tbody") {
+            //the cell
             return elem;
         } else {
-            return jTable.table(elem).tBodies[0].rows[row] && 
-              jTable.table(elem).tBodies[0].rows[row].cells[col === undefined ? elem.cellIndex : col];
+            //the tableheader
+            if (row === undefined) {
+                throw new TypeError("header.cell requires row parameter");
+            }
+            return jTable.cell(jTable.table(elem), row, elem.cellIndex);
         }
     },
-    tableData: function(elem, row, col) {
-        //returns the text contents of cell(elem)
-        var cellDOM = jTable.tableCell(elem, row, col);
-        if (!cellDOM) {
-            return undefined;
-        }
-        return cellDOM.textContent ? cellDOM.textContent : cellDOM.innerText;
-    },
-    tableHeaderCell: function(elem, col) {
+    column: function(elem, col) {
         //returns the <th> element at the top of the relevant column
         if (elem.tagName.toLowerCase() === 'table') {
+            if (col === undefined) {
+                throw new TypeError("table.column() requires col parameter");
+            }
             return elem.tHead.rows[0].cells[col];
-        }        
+        }  
         if (elem.parentNode.parentNode.tagName.toLowerCase() === "tbody") {
             return jTable.table(elem).tHead.rows[0].cells[elem.cellIndex];
         }
         return elem;
-    },
-    tableHeaderData: function(elem, row) {
-        //returns the data in the <td> element at the top of the relevant column
-        var cellDOM = jTable.tableHeaderCell(elem, row);
-        if (!cellDOM) {
-            return undefined;
-        }
-        return cellDOM.textContent ? cellDOM.textContent : cellDOM.innerText;
     },
     table: function(elem) {
         //returns node's container <table> element
@@ -73,7 +70,7 @@ var jTable = {
     },
     tableDataType: function(elem, col) {
         //returns the elem's headerCell dataType. table.dataType requires cellIndex parameter
-        var headerCell = jTable.tableHeaderCell(elem, col);
+        var headerCell = jTable.column(elem, col);
         if (headerCell.getAttribute("data-datatype")) {
             return headerCell.getAttribute("data-datatype");
         } else {
@@ -84,7 +81,7 @@ var jTable = {
     },
     tableCalculateDataType: function(elem, col) {
   	//check data type of first entry. then check if all others consistent, if not then string.
-	var headerCell = jTable.tableHeaderCell(elem);
+	var headerCell = jTable.column(elem, col);
 	var i = 0;
 	var dataType, dataType_old;
 	calcCellDataType = function(data) {
@@ -98,10 +95,10 @@ var jTable = {
 	    return answer;	    
 	}
 	if (elem.tagName.toLowerCase() === 'td') {
-	    return calcCellDataType(jTable.tableData(elem));
+	    return calcCellDataType(jTable.tableText(elem));
 	}
-	while (jTable.tableCell(headerCell, i)) {
-	    dataType = calcCellDataType(jTable.tableData(headerCell, i));
+	while (jTable.cell(headerCell, i)) {
+	    dataType = calcCellDataType(jTable.tableText(jTable.cell(headerCell, i)));
 	    if (i === 0) {
 	        dataType_old = dataType;
 	    }
@@ -117,10 +114,10 @@ var jTable = {
 	}	
 	return dataType;
     },
-    tableHide: function(elem) {
+    columnHide: function(elem) {
         //gets / sets hide for a column. tables require extra cellIndex parameter
         var setHide = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
-        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
+        var colHead = jTable.column(elem, arguments[1]);
         if (setHide === undefined) {
             //it's a GET: return the boolean hidden state
             return colHead.style.display === "none";
@@ -138,9 +135,9 @@ var jTable = {
             return elem;
         }
     },
-    tableFilter: function(elem) {
+    columnFilter: function(elem) {
         var setFilter = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
-        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
+        var colHead = jTable.column(elem, arguments[1]);
         var table = jTable.table(elem); 
         if (setFilter === undefined) {
            //it's a GET: returns the relevant header filter regexp.
@@ -163,12 +160,12 @@ var jTable = {
 	    var filters = [];
 	    var headerCell;
 	    while (true) {
-	        headerCell = jTable.tableHeaderCell(table, col);
+	        headerCell = jTable.column(table, col);
 	        if (!headerCell) {
 	            break;
 	        }
 	        if (headerCell.getAttribute("data-filter")) {
-	            filters.push({cellIndex: col, filter: jTable.tableFilter(headerCell)});
+	            filters.push({cellIndex: col, filter: jTable.columnFilter(headerCell)});
 	        }
 	        col++;
 	    }
@@ -179,7 +176,7 @@ var jTable = {
 	        rowpass = true;
 	        for (var j=0; j < filters.length; j++) {
 	        //if any of the filters doesn't match, then mark the row as filtered
-	            if (!filters[j].filter.test(jTable.tableData(table, irow, filters[j].cellIndex))) {
+	            if (!filters[j].filter.test(jTable.tableText(jTable.cell(table, irow, filters[j].cellIndex)))) {
 	                rowpass = false;
 	                break;
 	            }
@@ -201,12 +198,12 @@ var jTable = {
             //for tables returns array [{cellIndex:n, dir: 'up'}, ...]
             var aSort = [], hSort;
             if (elem.tagName.toLowerCase() === 'th' || elem.tagName.toLowerCase() === 'td') {
-                return jTable.tableHeaderCell(elem).getAttribute("data-sort");
+                return jTable.column(elem).getAttribute("data-sort");
             } else {
                 if (tbl.getAttribute("data-sortOrder")) {
                     hSort = tbl.getAttribute("data-sortOrder").split(",");
                     for (var i=0; i<hSort.length; i++) {
-                        aSort.push({cellIndex: hSort[i], dir: jTable.tableSort(jTable.tableHeaderCell(elem, hSort[i]))});
+                        aSort.push({cellIndex: hSort[i], dir: jTable.tableSort(jTable.column(elem, hSort[i]))});
                     }
                 }
                 return aSort;
@@ -238,13 +235,13 @@ var jTable = {
 	    var rows = tbl.tBodies[0].rows;
 	    //update sort attributes
 	    i = 0;
-	    while (jTable.tableHeaderCell(tbl, i)) {
-	        jTable.tableHeaderCell(tbl, i).removeAttribute("data-sort");
+	    while (jTable.column(tbl, i)) {
+	        jTable.column(tbl, i).removeAttribute("data-sort");
 	        i++;
 	    }
 	    var sortOrder = [];
 	    for (i=0; i < setSort.length; i++)  {
-	        jTable.tableHeaderCell(tbl, setSort[i].cellIndex).setAttribute("data-sort", setSort[i].dir);
+	        jTable.column(tbl, setSort[i].cellIndex).setAttribute("data-sort", setSort[i].dir);
 	        sortOrder.push(setSort[i].cellIndex);
 	    }
 	    tbl.setAttribute("data-sortOrder", sortOrder.join(","));
@@ -252,46 +249,57 @@ var jTable = {
 	        return tbl;
 	    }
 	    //if it's already sorted the opposite way, just reflect it
+	    //TODO: SURELY WE CAN USE array.reverse?
 	    if (currentSort.length === 1 && setSort.length === 1 && currentSort[0].cellIndex === setSort[0].cellIndex &&
 	      currentSort[0].dir !== setSort[0].dir) {
-	        for (i=rows.length - 1; i>=0; i--) {
-	            rows[0].parentNode.appendChild(rows[0].parentNode.removeChild(rows[i]));
-	        }	  
+	        Array.prototype.slice.call(rows).reverse();
 	    } else {
+	        Array.prototype.slice.call(rows).sort(function (rowA, rowB) {
+	            for (var j=0; j<setSort.length; j++) {
+	                textA = jTable.tableText(rowA.cells[setSort[j].cellIndex]);
+	                textB = jTable.tableText(rowB.cells[setSort[j].cellIndex]);
+	                console.log("j = %i, textA = %o, textB = %o", j, textA, textB);
+	                if (textA !== textB) {
+	                    return jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)].swap(textA, textB) ? setSort[j].dir === 'up' : setSort[j].dir === 'down';
+	                }
+	            }
+	            return false;
+	        });
+	    
 	    //TODO: SURELY WE CAN JUST USE rows.sort(cleverfunction())?
 	    //use comb sort O(n log n)
-	        var gap = rows.length;
-	        var swapped = true;
-	        var swapResult;
-	        var a, b;
-	        while (gap > 1 || swapped) {
+	    //    var gap = rows.length;
+	    //    var swapped = true;
+	    //    var swapResult;
+	    //    var a, b;
+	    //    while (gap > 1 || swapped) {
 	       //update the gap value for a next comb
-	            if (gap > 1) {
-	                gap = Math.floor (gap / 1.3);
-	                if (gap === 10 || gap === 9) {
-	                    gap = 11;
-	                }
-	            }
-	            swapped = false;
-	            //a single "comb" over the input list
-	            for (i=0; i + gap < rows.length; i++) for (var j=0; j<setSort.length; j++) {
-	                a = jTable.tableData(tbl, i, setSort[j].cellIndex);
-	                b = jTable.tableData(tbl, i + gap, setSort[j].cellIndex);
-	                if (a !== b) {
-	                    if (jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)].swap(a,b) ? setSort[j].dir === 'up' : setSort[j].dir === 'down') {
-	                        var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
-	   	                rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
-		     	        swapped = true;
-	                    } 
-	                    break;
-	                }
-	            }
-	        }
+	    //        if (gap > 1) {
+	    //            gap = Math.floor (gap / 1.3);
+	    //            if (gap === 10 || gap === 9) {
+	    //                gap = 11;
+	    //            }
+	    //        }
+	    //        swapped = false;
+	    //        //a single "comb" over the input list
+	    //        for (i=0; i + gap < rows.length; i++) for (var j=0; j<setSort.length; j++) {
+	    //            a = jTable.tableText(jTable.cell(tbl, i, setSort[j].cellIndex));
+	    //            b = jTable.tableText(jTable.cell(tbl, i + gap, setSort[j].cellIndex));
+	    //            if (a !== b) {
+	    //                if (jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)].swap(a,b) ? setSort[j].dir === 'up' : setSort[j].dir === 'down') {
+	    //                    var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
+	    //	                rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
+	    //	     	        swapped = true;
+	    //                } 
+	    //                break;
+	    //            }
+	    //        }
+	    //    }
 	    }
 	    return elem;
         }
     },
-    tableCellEditMode: function(elem, mode) {
+    cellEditMode: function(elem, mode) {
         if (elem.tagName.toLowerCase() === 'table') {
             return undefined;
         }
@@ -304,7 +312,7 @@ var jTable = {
             return false;        
         } else {
             //sets the cell to contenteditable or not
-            var currentMode = jTable.tableCellEditMode(elem);
+            var currentMode = jTable.cellEditMode(elem);
             var div;
             if (mode !== true && mode !== false) {
                 throw new TypeError("CellEditMode passed non-boolean value");
@@ -343,25 +351,25 @@ var jTable = {
                     elem.removeAttribute("id");
                 }
                 //re-calculate the dataType. should only need to do this if incompatible.
-                var head = jTable.tableHeaderCell(elem);
+                var head = jTable.column(elem);
                 head.setAttribute("data-datatype", jTable.tableCalculateDataType(head));
             }
             return elem;
         }
     },
-    tableAddColumn: function(elem) {
+    columnAdd: function(elem) {
         //adds col to the left if dir===false, right if dir===true. table.addColumn has extra cellIndex argument
-        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
+        var colHead = jTable.column(elem, arguments[1]);
         var dir = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
         if (typeof dir !== 'boolean') {
-            throw new TypeError("must pass boolean to tableAddColumn");
+            throw new TypeError("must pass boolean to columnAdd");
         }
         var th = document.createElement("th");
         var td = document.createElement("td");
         var dataCell;
         var i = 0;
         while (true) {
-            dataCell = jTable.tableCell(colHead, i);
+            dataCell = jTable.cell(colHead, i);
             if (!dataCell) {
                 break;
             }
@@ -371,13 +379,13 @@ var jTable = {
         colHead.parentNode.insertBefore(th, dir ? colHead.nextSibling : colHead);
         return elem;
     },
-    tableRemoveColumn: function(elem) {
+    columnRemove: function(elem) {
         //deletes the relevant column. table.deleteColumn has cellIndex argument
-        var colHead = jTable.tableHeaderCell(elem, arguments[1]);
+        var colHead = jTable.column(elem, arguments[1]);
         var i = 0;
         var cell;
         while (true) {
-            cell = jTable.tableCell(colHead, i)
+            cell = jTable.cell(colHead, i)
             if (!cell) {
                 break;
             }
@@ -386,6 +394,9 @@ var jTable = {
         }
         colHead.parentNode.removeChild(colHead);
         return elem;
+    },
+    tableText: function(elem) {
+        return elem.textContent ? elem.textContent : elem.innerText;
     }
 }
 jQuery.each(jTable, function(i) {
