@@ -3,13 +3,13 @@ jQuery.tableDataTypes = {
     number: {
         re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
         swap: function(a,b) {
-            return Number(a) - Number(b);
+            return Number(a) > Number(b);
         }
     },
     currency: {
         re: /^-?\d+(?:\.\d*)?$/i,
         swap: function(a,b) {
-            return Number(a) - Number(b);
+            return Number(a) > Number(b);
         }
     },
     date: {
@@ -18,12 +18,12 @@ jQuery.tableDataTypes = {
             return scratch.toString() !== 'NaN' && scratch.toString() !== 'Invalid Date';
         },
         swap: function(a,b) {
-            return Date.parse(a) - Date.parse(b);
+            return Date.parse(a) > Date.parse(b);
         }
     },
     string: {
         swap: function(a,b) {
-            return a - b;
+            return a > b;
         }
     }
 };
@@ -44,7 +44,8 @@ var jTable = {
             if (row === undefined) {
                 throw new TypeError("header.cell requires row parameter");
             }
-            return jTable.cell(jTable.table(elem), row, elem.cellIndex);
+            return jTable.table(elem).tBodies[0].rows[row] && 
+              jTable.table(elem).tBodies[0].rows[row].cells[elem.cellIndex];
         }
     },
     column: function(elem, col) {
@@ -203,7 +204,7 @@ var jTable = {
                 if (tbl.getAttribute("data-sortOrder")) {
                     hSort = tbl.getAttribute("data-sortOrder").split(",");
                     for (var i=0; i<hSort.length; i++) {
-                        aSort.push({cellIndex: hSort[i], dir: jTable.tableSort(jTable.column(elem, hSort[i]))});
+                        aSort.push({cellIndex: parseInt(hSort[i], 10), dir: jTable.tableSort(jTable.column(elem, hSort[i]))});
                     }
                 }
                 return aSort;
@@ -229,9 +230,7 @@ var jTable = {
                     throw new TypeError("setSort() expects cellIndex and dir for array item " + i);
                 }
             }
-    	    //this is a comb sort. O(n log n), but O(n) if already sorted
-	    //for now, just sort using first item in sort array
-	    var currentSort = jTable.tableSort(tbl);
+    	    var currentSort = jTable.tableSort(tbl);
 	    var rows = tbl.tBodies[0].rows;
 	    //update sort attributes
 	    i = 0;
@@ -249,52 +248,27 @@ var jTable = {
 	        return tbl;
 	    }
 	    //if it's already sorted the opposite way, just reflect it
-	    //TODO: SURELY WE CAN USE array.reverse?
+	    var newRows = Array.prototype.slice.call(rows);
 	    if (currentSort.length === 1 && setSort.length === 1 && currentSort[0].cellIndex === setSort[0].cellIndex &&
 	      currentSort[0].dir !== setSort[0].dir) {
-	        Array.prototype.slice.call(rows).reverse();
+	        newRows.reverse();
 	    } else {
-	        Array.prototype.slice.call(rows).sort(function (rowA, rowB) {
+	        newRows.sort(function (rowA, rowB) {
 	            for (var j=0; j<setSort.length; j++) {
 	                textA = jTable.tableText(rowA.cells[setSort[j].cellIndex]);
 	                textB = jTable.tableText(rowB.cells[setSort[j].cellIndex]);
-	                console.log("j = %i, textA = %o, textB = %o", j, textA, textB);
 	                if (textA !== textB) {
 	                    return jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)].swap(textA, textB) ? setSort[j].dir === 'up' : setSort[j].dir === 'down';
 	                }
 	            }
 	            return false;
 	        });
-	    
-	    //TODO: SURELY WE CAN JUST USE rows.sort(cleverfunction())?
-	    //use comb sort O(n log n)
-	    //    var gap = rows.length;
-	    //    var swapped = true;
-	    //    var swapResult;
-	    //    var a, b;
-	    //    while (gap > 1 || swapped) {
-	       //update the gap value for a next comb
-	    //        if (gap > 1) {
-	    //            gap = Math.floor (gap / 1.3);
-	    //            if (gap === 10 || gap === 9) {
-	    //                gap = 11;
-	    //            }
-	    //        }
-	    //        swapped = false;
-	    //        //a single "comb" over the input list
-	    //        for (i=0; i + gap < rows.length; i++) for (var j=0; j<setSort.length; j++) {
-	    //            a = jTable.tableText(jTable.cell(tbl, i, setSort[j].cellIndex));
-	    //            b = jTable.tableText(jTable.cell(tbl, i + gap, setSort[j].cellIndex));
-	    //            if (a !== b) {
-	    //                if (jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)].swap(a,b) ? setSort[j].dir === 'up' : setSort[j].dir === 'down') {
-	    //                    var tempRowiPlusGap = rows[i].parentNode.replaceChild(rows[i], rows[i+gap]);
-	    //	                rows[i].parentNode.insertBefore(tempRowiPlusGap, rows[i]);
-	    //	     	        swapped = true;
-	    //                } 
-	    //                break;
-	    //            }
-	    //        }
-	    //    }
+	    }
+	    // replace the old table with the new array
+	    var i = rows.length - 1;
+	    while (i >= 0) {
+	        rows[i].parentNode.insertBefore(newRows[i], rows[i+1]);	
+	        i--;
 	    }
 	    return elem;
         }
