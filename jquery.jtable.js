@@ -72,6 +72,7 @@ var jTable = {
     tableDataType: function(elem, col) {
         //returns the elem's headerCell dataType. table.dataType requires cellIndex parameter
         var headerCell = jTable.column(elem, col);
+        var answer;
         if (headerCell.getAttribute("data-datatype")) {
             return headerCell.getAttribute("data-datatype");
         } else {
@@ -85,7 +86,7 @@ var jTable = {
 	var headerCell = jTable.column(elem, col);
 	var i = 0;
 	var dataType, dataType_old;
-	calcCellDataType = function(data) {
+	var calcCellDataType = function(data) {
 	    var answer = "string";
 	    for (var j in jQuery.tableDataTypes) if (j !== 'string') {
 	        if ((!jQuery.tableDataTypes[j].re || jQuery.tableDataTypes[j].re.test(data)) && (!jQuery.tableDataTypes[j].js || jQuery.tableDataTypes[j].js(data))) {
@@ -94,7 +95,7 @@ var jTable = {
 	        }
 	    }
 	    return answer;	    
-	}
+	};
 	if (elem.tagName.toLowerCase() === 'td') {
 	    return calcCellDataType(jTable.tableText(elem));
 	}
@@ -194,6 +195,7 @@ var jTable = {
     },
     tableSort: function (elem, setSort) {
         var tbl = jTable.table(elem);
+        var i;
         if (setSort === undefined) {
             //GET SORT. for columns returns "up", "down" or undefined
             //for tables returns array [{cellIndex:n, dir: 'up'}, ...]
@@ -203,7 +205,7 @@ var jTable = {
             } else {
                 if (tbl.getAttribute("data-sortOrder")) {
                     hSort = tbl.getAttribute("data-sortOrder").split(",");
-                    for (var i=0; i<hSort.length; i++) {
+                    for (i=0; i<hSort.length; i++) {
                         aSort.push({cellIndex: parseInt(hSort[i], 10), dir: jTable.tableSort(jTable.column(elem, hSort[i]))});
                     }
                 }
@@ -211,7 +213,6 @@ var jTable = {
             }
         } else {
             //SET SORT
-            var i;
             if (elem.tagName.toLowerCase() === 'th' || elem.tagName.toLowerCase() === 'td') {
                 if (setSort !== "up" && setSort !== "down" && setSort !== "") {
                     throw new TypeError("setSort should be 'up', 'down', or ''");
@@ -249,6 +250,7 @@ var jTable = {
 	    }
 	    //if it's already sorted the opposite way, just reflect it
 	    var newRows = Array.prototype.slice.call(rows);
+	    var textA, textB;
 	    if (currentSort.length === 1 && setSort.length === 1 && currentSort[0].cellIndex === setSort[0].cellIndex &&
 	      currentSort[0].dir !== setSort[0].dir) {
 	        newRows.reverse();
@@ -265,7 +267,7 @@ var jTable = {
 	        });
 	    }
 	    // replace the old table with the new array
-	    var i = rows.length - 1;
+	    i = rows.length - 1;
 	    while (i >= 0) {
 	        rows[i].parentNode.insertBefore(newRows[i], rows[i+1]);	
 	        i--;
@@ -274,13 +276,14 @@ var jTable = {
         }
     },
     cellEditMode: function(elem, mode) {
+        var i;
         if (elem.tagName.toLowerCase() === 'table') {
             return undefined;
         }
         if (mode === undefined) {
             //GET editmodel. returns boolean depending on contenteditable state
             var divs = elem.getElementsByTagName("div");
-            for (var i=0; i < divs.length; i++) if (divs[i].contentEditable) {
+            for (i=0; i < divs.length; i++) if (divs[i].contentEditable) {
                 return true;
             }
             return false;        
@@ -307,7 +310,7 @@ var jTable = {
             } 
             if (!mode && currentMode) {
                 //find the child div with contentEditable==true
-                for (var i=0; i < elem.childNodes.length; i++) {
+                for (i=0; i < elem.childNodes.length; i++) {
                     if (elem.childNodes[i].nodeType === 1 && elem.childNodes[i].nodeName.toLowerCase() === 'div' && elem.childNodes[i].contentEditable) {
                         div = elem.childNodes[i];
                         break;
@@ -359,7 +362,7 @@ var jTable = {
         var i = 0;
         var cell;
         while (true) {
-            cell = jTable.cell(colHead, i)
+            cell = jTable.cell(colHead, i);
             if (!cell) {
                 break;
             }
@@ -372,18 +375,16 @@ var jTable = {
     tableText: function(elem) {
         return elem.textContent ? elem.textContent : elem.innerText;
     }
-}
+};
 jQuery.each(jTable, function(i) {
     var that = this;
-    var node;
-    var answer;
-    var temp;
+    var node, answer, temp;
     jQuery.fn[i] = function() {
         var jTableArgs = arguments;
         answer = [];
         this.each(function() {
             //"this" is now a matching DOM node, clean up to <td>, <th>, <table>, or "do nothing"
-            var node = this;
+            node = this;
             while (!/^body|table|th|td$/.test(node.tagName.toLowerCase())) {
                 node = node.parentNode;
             }
