@@ -1,4 +1,3 @@
-//TODO: WRAP in (function() {}) () as per http://docs.jquery.com/Plugins/Authoring
 jQuery.tableDataTypes = {
     number: {
         re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
@@ -119,20 +118,20 @@ var jTable = {
     columnHide: function(elem) {
         //gets / sets hide for a column. tables require extra cellIndex parameter
         var setHide = elem.tagName.toLowerCase() === 'table' ? arguments[2] : arguments[1];
+        var cells = $(elem).table().find("tr *:nth-child(" + cellIndex1based + ")");
         var colHead = jTable.column(elem, arguments[1]);
+        var currentHide = cells.css("display") === "none";
         if (setHide === undefined) {
             //it's a GET: return the boolean hidden state
-            return colHead.style.display === "none";
+            return currentHide;
         } else {
             //it's a SET.
-            var currentHide = colHead.style.display === "none";
-            var cellIndex1based = colHead.cellIndex + 1;
-            var table = jTable.table(elem); 
+            var cellIndex1based = Number(cells.attr("cellIndex")) + 1;
             if (setHide && !currentHide) {
-                $(table).find("tr *:nth-child(" + cellIndex1based + ")").css("display", "none");
+                cells.css("display", "none");
             } 
             if (!setHide && currentHide) {
-                $(table).find("tr *:nth-child(" + cellIndex1based + ")").css("display", "");
+                cells.css("display", "");
             }
             return elem;
         }
@@ -251,8 +250,9 @@ var jTable = {
 	    //if it's already sorted the opposite way, just reflect it
 	    var newRows = Array.prototype.slice.call(rows);
 	    var textA, textB;
-	    if (currentSort.length === 1 && setSort.length === 1 && currentSort[0].cellIndex === setSort[0].cellIndex &&
-	      currentSort[0].dir !== setSort[0].dir) {
+	    if (currentSort.length === 1 && setSort.length === 1 && 
+	        currentSort[0].cellIndex === setSort[0].cellIndex &&
+	        currentSort[0].dir !== setSort[0].dir) {
 	        newRows.reverse();
 	    } else {
 	        newRows.sort(function (rowA, rowB) {
@@ -266,6 +266,7 @@ var jTable = {
 	            return false;
 	        });
 	    }
+	    
 	    // replace the old table with the new array
 	    i = rows.length - 1;
 	    while (i >= 0) {
