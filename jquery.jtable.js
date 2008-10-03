@@ -1,14 +1,26 @@
 jQuery.tableDataTypes = {
     number: {
         re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
+        convert: function(a) {
+            return Number(a);
+        },
         swap: function(a,b) {
-            return Number(a) > Number(b);
+            if (a === b) {
+                return 0;
+            }
+            return Number(a) > Number(b) ? 1 : -1;
         }
     },
     currency: {
         re: /^-?\d+(?:\.\d*)?$/i,
+        convert: function(a) {
+            return Number(a);
+        },
         swap: function(a,b) {
-            return Number(a) > Number(b);
+            if (a === b) {
+                return 0;
+            }
+            return Number(a) > Number(b) ? 1 : -1;
         }
     },
     date: {
@@ -16,13 +28,25 @@ jQuery.tableDataTypes = {
             var scratch = new Date(x); 
             return scratch.toString() !== 'NaN' && scratch.toString() !== 'Invalid Date';
         },
+        convert: function(a) {
+            return Date.parse(a);
+        },
         swap: function(a,b) {
-            return Date.parse(a) > Date.parse(b);
+            if (a === b) {
+                return 0;
+            }
+            return Date.parse(a) > Date.parse(b) ? 1 : -1;
         }
     },
     string: {
+        convert: function(a) {
+            return String(a);
+        },
         swap: function(a,b) {
-            return a > b;
+            if (a === b) {
+                return 0;
+            }
+            return a > b ? 1 : -1;
         }
     }
 };
@@ -248,8 +272,12 @@ var jTable = {
 	        return tbl;
 	    }
 	    //if it's already sorted the opposite way, just reflect it
-	    var newRows = Array.prototype.slice.call(rows);
-	    var textA, textB;
+	    var newRows = [];
+	    for (i = 0; i< rows.length; i++) {
+	        newRows.push(rows[i]);
+	    }
+	    //var newRows = Array.prototype.slice.call(rows);
+	    var textA, textB, dataType;
 	    if (currentSort.length === 1 && setSort.length === 1 && 
 	        currentSort[0].cellIndex === setSort[0].cellIndex &&
 	        currentSort[0].dir !== setSort[0].dir) {
@@ -259,18 +287,23 @@ var jTable = {
 	            for (var j=0; j<setSort.length; j++) {
 	                textA = jTable.tableText(rowA.cells[setSort[j].cellIndex]);
 	                textB = jTable.tableText(rowB.cells[setSort[j].cellIndex]);
+	                dataType = jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)];
 	                if (textA !== textB) {
-	                    return jQuery.tableDataTypes[jTable.tableDataType(tbl, setSort[j].cellIndex)].swap(textA, textB) ? setSort[j].dir === 'up' : setSort[j].dir === 'down';
+	                    return ((dataType.convert(textA) > dataType.convert(textB) ? 1 : -1 ) * 
+	                            (setSort[j].dir === 'up' ? 1 : -1));
 	                }
 	            }
 	            return false;
 	        });
 	    }
-	    
 	    // replace the old table with the new array
 	    i = rows.length - 1;
 	    while (i >= 0) {
-	        rows[i].parentNode.insertBefore(newRows[i], rows[i+1]);	
+	        if (i === rows.length - 1) {
+	            rows[i].parentNode.appendChild(newRows[i]);
+	        } else {
+	            rows[i].parentNode.insertBefore(newRows[i], rows[i+1]);	
+	        }
 	        i--;
 	    }
 	    return elem;
