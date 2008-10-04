@@ -61,7 +61,7 @@ table() returns a jQuery object representing the parent HTML table element.
 
 Using the example above, {{{$('tbl_tbody_tr0_0').table()}}} returns an array containing the parent HTML <table> element, i.e. {{{[$('#tbl')]}}}.
 
-Similarly, {{{$('#tbl').table() returns $('#tbl')}}}.
+Similarly, {{{$('#tbl').table() returns [$('#tbl')]}}}.
 
 ===cell()===
 cell() is intended to help you navigate to the correct cell in the table. It returns the jQuery DOM table cell element (<td> or <th>) at the given location. It takes up to two parameters.
@@ -87,7 +87,7 @@ For cell data elements, column() takes no parameters, and returns the table head
 
 For example:
 
-{{{$('#tbl').column()(1)}}} returns the cell header at the second column, which is {{{$('#tbl_thead_th1')}}}.
+{{{$('#tbl').column(1)}}} returns the cell header at the second column, which is {{{$('#tbl_thead_th1')}}}.
 
 {{{$('#tbl_thead_th1').column()}}} returns itself, since tbl_thead_th1 is already a header cell. which is {{{$('#tbl_thead_th1')}}}.
 
