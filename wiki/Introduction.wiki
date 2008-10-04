@@ -1,10 +1,10 @@
-Welcome to jTable, the javascript library for manipulating HTML tables. jTable is currently being re-written as a jQuery plugin. All methods are accessed using the standard jQuery() function, or its aliases such as $().
+Welcome to jTable, the jQuery plugin for manipulating HTML tables, including hiding, sorting, filtering, editing, adding and removing rows and columns.
 
 
 ==Source files==
 There is only one file containing the library - jquery.jtable.js. All the other files are part of the testsuite, and can be run from testsuite.htm using the directory structure given.
 
-The testsuite uses the jUnit module to run through all the functionality. It also provides a simple demo table with a user interface for sorting, filtering, hiding columns, and editing or styling the table.
+The testsuite uses the standard jUnit module. It also provides a simple demo table with a user interface for sorting, filtering, hiding columns, and editing the table.
 
 The rest of this document explains the API for jTable. To include it in your website, copy the file and include it in your <head> section, e.g.
 {{{ <script src="jquery.jtable.js" type="text/javascript"></script>}}}
@@ -30,17 +30,25 @@ Throughout this document, I will use the following example table:
     <td id="tbl_tbody_tr0_3">110</td>
     <td id="tbl_tbody_tr0_4">150</td>
   </tr>
+  <tr id="tbl_tbody_tr1">
+    <th id="tbl_tbody_tr1_0">UK</th>
+    <td id="tbl_tbody_tr1_1">50</td>
+    <td id="tbl_tbody_tr1_2">70</td>
+    <td id="tbl_tbody_tr1_3">120</td>
+    <td id="tbl_tbody_tr1_4">130</td>
+  </tr>
   </tbody>
 </table>
 }}}
 which displays like this:
 || *Country* || *Q1* || *Q2* || *Q3* || *Q4* ||
 || USA || 100 || 80 || 110 || 150 ||
+|| UK || 50 || 70 || 120 || 130 ||
 
 ==General Observations==
 All jTable functions are called from the normal jQuery object and obey normal jQuery syntax. For example, jTable functions return arrays that can be chained and filtered, like any other jQuery function.
 
-All jTable function names start with "table" - for example, {{{tableSort()}}}. That's so you can identify them quickly as part of this jQuery plugin.
+All jTable function names start with "table", "column" or "cell" - for example, {{{tableSort()}}}. That's so you can identify them quickly as part of this jQuery plugin.
 
 jTable is targeted at three DOM elements in particuar: <table>, <th> and <td>. If you call jTable from any other DOM element - for example {{{$('img').tableSort()}}} - then jTable adopts the following rule:
 If the <img> is part of a <table>, <th> or <td> element, then it uses that element instead. If not, then the function returns {{{undefined}}}.
@@ -55,57 +63,35 @@ Using the example above, {{{$('tbl_tbody_tr0_0').table()}}} returns an array con
 
 Similarly, {{{$('#tbl').table() returns $('#tbl')}}}.
 
-===tableCell()===
-tableCell() is intended to help you navigate to the correct cell in the table. It returns the jQuery DOM table cell element (<td> or <th>) at the given location. It takes up to two parameters.
+===cell()===
+cell() is intended to help you navigate to the correct cell in the table. It returns the jQuery DOM table cell element (<td> or <th>) at the given location. It takes up to two parameters.
 
-For tables, tableCell() takes two parameters representing the row and column of the cell. For table headers, tableCell() takes one parameter representing the row. For cells, tableCell() returns itself.
-
-For example:
-
-{{{$('#tbl').tableCell(0, 1)}}} returns the cell at the first row of the table body, in the second column, which is {{{$('#tbl_tbody_tr0_1')}}}.
-
-{{{$('#tbl_thead_th1').tableCell(0)}}} returns the first cell in the relevant column (since tbl_thead_th1 is a header cell), which is {{{$('#tbl_tbody_tr0_1')}}}.
-
-{{{$('tbl_tbody_tr0_0').tableCell()}}} returns itself ({{{$('tbl_tbody_tr0_0')}}}), since tbl_tbody_tr0_0 is already a table cell.
-
-===tableData()===
-tableData() works exactly like tableCell(), except it returns the textContent (or innerText, depending on your browser) of the relevant cell. It takes the same two parameters as tableCell().
+For tables, cell() takes two parameters representing the row and column of the cell. For columns, cell() takes one parameter representing the row. For cells, cell() returns itself.
 
 For example:
 
-{{{$('#tbl').tableData(0, 1)}}} returns the cell contents at the first row of the table body, in the second column, which is {{{100}}}.
+{{{$('#tbl').cell(0, 1)}}} returns the cell at the first row of the table body, in the second column, which is {{{$('#tbl_tbody_tr0_1')}}}.
 
-{{{$('#tbl_thead_th1').tableCell(0)}}} returns the cell contents of the first cell in the relevant column (since tbl_thead_th1 is a header cell), which is {{{100}}}.
+{{{$('#tbl_thead_th1').cell(0)}}} returns the first cell in the relevant column (since tbl_thead_th1 is a header cell), which is {{{$('#tbl_tbody_tr0_1')}}}.
 
-{{{$('tbl_tbody_tr0_0').tableCell()}}} returns its text contents {{{100}}}, since tbl_tbody_tr0_0 is already a table cell.
+{{{$('tbl_tbody_tr0_0').cell()}}} returns itself ({{{$('tbl_tbody_tr0_0')}}}), since tbl_tbody_tr0_0 is already a table cell.
 
-===tableHeaderCell()===
-tableHeaderCell() returns the relevant header cell - the <th> element at the top of the column in question. It takes up to one parameter.
+===column()===
+column() returns the header cell (<th> element) at the top of the column in question. It takes up to one parameter.
 
-For tables, tableHeaderCell() takes a single parameter, representing the cellIndex of the relevant header cell.
+For tables, column() takes a single parameter, representing the cellIndex of the relevant header cell.
 
-For table header cells, tableHeaderCell() takes no parameters, and returns itself.
+For table header cells, column() takes no parameters, and returns itself.
 
-For cell data elements, tableHeaderCell() takes no parameters, and returns the table header cell at the top of its column.
+For cell data elements, column() takes no parameters, and returns the table header cell at the top of its column.
 
 For example:
 
-{{{$('#tbl').tableHeaderCell(1)}}} returns the cell header at the second column, which is {{{$('#tbl_thead_th1')}}}.
+{{{$('#tbl').column()(1)}}} returns the cell header at the second column, which is {{{$('#tbl_thead_th1')}}}.
 
-{{{$('#tbl_thead_th1').tableHeaderCell()}}} returns itself, since tbl_thead_th1 is already a header cell. which is {{{$('#tbl_thead_th1')}}}.
+{{{$('#tbl_thead_th1').column()}}} returns itself, since tbl_thead_th1 is already a header cell. which is {{{$('#tbl_thead_th1')}}}.
 
-{{{$('tbl_tbody_tr0_0').tableHeaderCell()}}} returns the cell header at the top of its columnm which is {{{$('#tbl_thead_th1')}}}.
-
-===tableHeaderData()===
-tableHeaderData() works exactly like tableHeaderCell, except it returns the textContent (or innerText, depending on your browser) of the relevant header cell.
-
-For example,
-
-{{{$('#tbl').tableHeaderData(1)}}} returns the cell contents at the first row of the table body, in the second column, which is {{{Q1}}}.
-
-{{{$('#tbl_thead_th1').tableHeaderData()}}} returns the cell contents of itself, which is {{{Q1}}}.
-
-{{{$('tbl_tbody_tr0_0').tableHeaderData()}}} returns the contents of the header cell in its column, which is {{{Q1}}}.
+{{{$('tbl_tbody_tr0_0').column()}}} returns the cell header at the top of its columnm which is {{{$('#tbl_thead_th1')}}}.
 
 ==Table Manipulation==
 
