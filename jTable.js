@@ -4,8 +4,15 @@ var colOptions = {
     open: function(colHead) {
 	//first, get the unique entries in the list into an array. then sort array.
 	this.colHead = colHead;
-	var filter = colHead.columnFilter()[0];
-        var i = 0, val = "";
+        var isRegExp = /^\/(.+)\/$/.exec(colHead.attr("data-filter"));
+        var filter;
+        if (isRegExp) {
+            filter = new RegExp(isRegExp[1]);
+        } else {
+            filter = false;
+        }
+	console.log("filter = %o", filter);
+	var i = 0, val = "";
         var colSelector = "*:nth-child(" + (this.colHead.attr("cellIndex") + 1) + ")";
 	//set up initial values
         this.div.find('input').removeAttr("checked");
@@ -160,9 +167,6 @@ var menu = {
 function mDown(e) {
     var e = e ? e : window.event;
     var elem = $(e.target ? e.target : e.srcElement);
-    if (!elem.table()) {
-        return false;
-    }
     var table = elem.parents("table");
     var tableOffsetLeft = table.offset().left;
     var removeEditCell = function() {
