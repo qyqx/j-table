@@ -7,17 +7,18 @@
 <script src="jquery-1.2.6.pack.js" type="text/javascript"></script>
 <script src="testrunner.js" type="text/javascript"></script>
 <script src="jquery.jtable.js" type="text/javascript"></script>
+<script src="jquery.tinysort.js" type="text/javascript"></script>
 </head>
 <body>
 
 <div id="menu">
 	<h1>SpreadTable</h1>
-	<ul id="tabHeaders">
-		<li><a href="javascript:menu.clickTab('File')">File</a></li>
-		<li class="selected"><a href="javascript:menu.clickTab('Style')">Style</a></li>
-		<li><a href="javascript:menu.clickTab('Insert')">Insert</a></li>
-		<li><a href="javascript:menu.clickTab('Revise')">Revise</a></li>
-		<li><a href="javascript:menu.clickTab('Collaborate')">Collaborate</a></li>
+	<ul id="tabHeaders" onclick="menu.clickTab(event)">
+		<li><a href="#">File</a></li>
+		<li class="selected"><a href="#">Style</a></li>
+		<li><a href="#">Insert</a></li>
+		<li><a href="#">Revise</a></li>
+		<li><a href="#">Collaborate</a></li>
 	</ul>
 	<div id="tabContents">
 		<ul id="tabFile">
@@ -96,11 +97,11 @@
 	<div id="colOptionsSort">
 		<h4>Sort:</h4>
 	  	<span class="divOption">
-			<input type="radio" name="sort" id="sort_ascending" value="ascending"/>
+			<input type="radio" name="sort" id="sort_ascending" value="asc"/>
 			<label for="sort_ascending">ascending</label>
 	  	</span>
 	  	<span class="divOption">
-			<input type="radio" name="sort" id="sort_descending" value="descending"/>
+			<input type="radio" name="sort" id="sort_descending" value="desc"/>
 			<label for="sort_descending">descending</label>
 	  	</span>
     </div>
