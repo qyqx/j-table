@@ -3,24 +3,12 @@ jQuery.tableDataTypes = {
         re: /^-?\d+(?:\.\d*)?(?:e[+\-]?\d+)?$/i, 
         convert: function(a) {
             return Number(a);
-        },
-        swap: function(a,b) {
-            if (a === b) {
-                return 0;
-            }
-            return Number(a) > Number(b) ? 1 : -1;
         }
     },
     currency: {
         re: /^-?\d+(?:\.\d*)?$/i,
         convert: function(a) {
             return Number(a);
-        },
-        swap: function(a,b) {
-            if (a === b) {
-                return 0;
-            }
-            return Number(a) > Number(b) ? 1 : -1;
         }
     },
     date: {
@@ -30,23 +18,11 @@ jQuery.tableDataTypes = {
         },
         convert: function(a) {
             return Date.parse(a);
-        },
-        swap: function(a,b) {
-            if (a === b) {
-                return 0;
-            }
-            return Date.parse(a) > Date.parse(b) ? 1 : -1;
         }
     },
     string: {
         convert: function(a) {
             return String(a);
-        },
-        swap: function(a,b) {
-            if (a === b) {
-                return 0;
-            }
-            return a > b ? 1 : -1;
         }
     }
 };

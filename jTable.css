@@ -36,8 +36,8 @@ th {font-weight:bold; background: #CCCCCC; padding:0px; margin:0px; border:1px s
 td {padding:0px; border:1px solid black; margin:0px;}
 thead th {background-repeat:no-repeat; background-position:center right; 
 	background-image:url(testsuite_images/nosort-nofilter.jpg); padding-right:22px;}
-thead th[data-sort='up'] {background-image:url(testsuite_images/sortup-nofilter.jpg);}
-thead th[data-sort='down'] {background-image:url(testsuite_images/sortdown-nofilter.jpg);}
+thead th[data-sort='asc'] {background-image:url(testsuite_images/sortup-nofilter.jpg);}
+thead th[data-sort='desc'] {background-image:url(testsuite_images/sortdown-nofilter.jpg);}
 thead th[data-filter] {background-image:url(testsuite_images/nosort-filter.jpg);}
 thead th[data-filter][data-sort='up'] {background-image:url(testsuite_images/sortup-filter.jpg);}
 thead th[data-filter][data-sort='down'] {background-image:url(testsuite_images/sortdown-filter.jpg);}
